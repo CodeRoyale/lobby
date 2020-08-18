@@ -1,1 +1,1 @@
-// This is the documnetation for Lobby
+// This is the documentation of the lobby
