@@ -1,4 +1,4 @@
-const users={};
+users={};
 
 const addUser = ({userName, socket_id, room_id, team_name, rank, profilePicture}) => {
     try {
@@ -27,3 +27,27 @@ const addUser = ({userName, socket_id, room_id, team_name, rank, profilePicture}
      return err;
    }
 }
+
+const updateUser = ({userName, socket_id, room_id, team_name, rank, profilePicture}) => {
+    if(socket_id){
+        users[userName].socket_id = socket_id;
+    }
+    if(room_id){
+        users[userName].room_id = room_id;
+    }
+    if(team_name){
+        users[userName].team_name = team_name;
+    }
+    if(rank){
+        users[userName].rank = rank;
+    }
+    if(profilePicture){
+        users[userName].profilePicture = profilePicture;
+    }
+    return users[userName];
+};
+
+module.exports = {
+    addUser,
+    updateUser,
+  };
