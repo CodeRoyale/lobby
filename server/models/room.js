@@ -23,3 +23,7 @@ const createRoom = (roomConfig , roomState , roomCompetition , roomTeams) =>{
     }
     
 }
+
+const joinRoom = ()=>{
+    
+}
