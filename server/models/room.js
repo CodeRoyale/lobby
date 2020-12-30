@@ -17,9 +17,9 @@ rooms = {};
 // codeSubmission
 // getRoomData
 
-const createRoom = (roomConfig , roomState , roomCompetition , roomTeams) =>{
-    if(!roomConfig.userName){
-        throw new Error("Username not specified.");
-    }
-    
-}
+const createRoom = (roomConfig, roomState, roomCompetition, roomTeams) => {
+  // TODO : @sastaachar
+  if (!roomConfig.userName) {
+    throw new Error("Username not specified.");
+  }
+};
