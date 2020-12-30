@@ -3,12 +3,8 @@ const uuid = require("uuid");
 const jwt = require("jsonwebtoken");
 
 const encryptData = (data) => {
-  // encrypt data
-  // use symmetric keys
-  // use block encryption
-  // one way encrption is fine
+  // TODO : pls fix this
 
-  // Note : Remove binod encrpytion, it is too secure
   return uuid.v4();
 };
 
