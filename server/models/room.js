@@ -126,7 +126,7 @@ const createRoom = (config) => {
   return room_obj;
 };
 
-const joinRoom = ({ userName, room_id, team_name }) => {
+const joinRoom = ({ userName, room_id, team_name }, user) => {
   if(
     rooms[room_id] && 
     (!rooms[room_id].config.privateRoom ||
@@ -138,7 +138,7 @@ const joinRoom = ({ userName, room_id, team_name }) => {
 
     //quit from prev room and try again
 
-    let user = getUser(userName);
+    
     if (user.room_id) {
       //already in a group don't allow
       throw new Error("User already in room");
@@ -160,7 +160,7 @@ const joinRoom = ({ userName, room_id, team_name }) => {
         rooms[room_id].state.bench.push(userName);
       }
 
-      updateUser({ userName:userName, room_id:room_id, team_name:team_name});
+      
 
       //user has been added to bench or a Team
       rooms[room_id].state.cur_memCount += 1;
@@ -170,8 +170,8 @@ const joinRoom = ({ userName, room_id, team_name }) => {
     throw new Error("The User doesn't meet the specifications");
 };
 
-const removeUserFromRoom = ({ userName }) => {
-  const { room_id, team_name } = getUser(userName);
+const removeUserFromRoom = ({ userName },user) => {
+  const { room_id, team_name } = user;
 
   // if user is a admin then no leave only delete possible
   // it cause of the way i am storing room_id ( == adminName)
@@ -196,13 +196,13 @@ const removeUserFromRoom = ({ userName }) => {
 
   // removed
   rooms[room_id].state.cur_memCount -= 1;
-  updateUser({ userName:userName,  team_name:"" , room_id: "" });
+  
 
   return rooms[room_id];
 };
 
-const joinTeam = ({ userName, team_name}) => {
-  const user = getUser(userName);
+const joinTeam = ({ userName, team_name}, user) => {
+  
   room = rooms[user.room_id];
   // only run if user and room exits and user is in that room
   // and there is space
@@ -225,17 +225,55 @@ const joinTeam = ({ userName, team_name}) => {
     //in new team
     rooms[user.room_id].teams[team_name].push(userName);
 
-    updateUser({ userName:userName,  team_name: team_name });
+    
     return rooms[user.room_id].teams[team_name];
   }
   throw new Error("The User doesn't meet the specifications to join the team");
 };
 
+const closeRoom = ({ userName , room_id}, forceCloseRoom = false, user) => {
 
+
+  const { room_id } = user;
+  if(forceCloseRoom) {
+    if (rooms[room_id] && rooms[room_id].config.admin === userName) {
+      // everyone from room bench
+      let allMembers = rooms[room_id].state.bench;
+      // from all teams
+      Object.keys(rooms[room_id].teams).forEach((team_name) => {
+        rooms[room_id].teams[team_name].forEach((user) => {
+          allMembers.push(user);
+        });
+      });
+      // delete the stupid room
+      delete rooms[room_id];
+      return true;
+    }
+    throw new Error("The User doesn't meet the specifications to close the room.");
+  } else {
+    // throw error if competition is going on 
+      if (rooms[room_id] && rooms[room_id].config.admin === userName &&
+        rooms[room_id].competition.contestOn === false) {
+        // everyone from room bench
+        let allMembers = rooms[room_id].state.bench;
+        // from all teams
+        Object.keys(rooms[room_id].teams).forEach((team_name) => {
+          rooms[room_id].teams[team_name].forEach((user) => {
+            allMembers.push(user);
+          });
+        });
+        // delete the stupid room
+        delete rooms[room_id];
+        return true;
+      }
+      throw new Error("There is a ongoing competition in the room. Please finish the competition and try closing the room.");
+    }
+}
 
 module.exports = {
   createRoom,
   joinRoom,
   removeUserFromRoom,
   joinTeam,
+  closeRoom,
 };
