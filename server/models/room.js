@@ -1,7 +1,10 @@
 //* import utils
 
 //// using relative paths here (need to find better)
+import { setRoom } from "../controllers/userController";
+import { ROOM_UPDATED } from "../socketActions/serverActions";
 import { encryptData } from "../utils/auth";
+import { updateUser } from "user";
 
 // this is my db for now
 rooms = {};
@@ -53,7 +56,7 @@ const getProperValue = (field, passedValue) => {
   return Math.min(ROOM_LIMITS[field], passedValue || ROOM_DEFAULTS[field]);
 };
 
-const createRoom = (config, roomState, roomCompetition, roomTeams) => {
+const createRoom = (config) => {
   // TODO : @sastaachar
 
   // TODO : refactor casing (camel -> _ )
@@ -123,7 +126,49 @@ const createRoom = (config, roomState, roomCompetition, roomTeams) => {
   return room_obj;
 };
 
-const joinRoom = () => {};
+const joinRoom = ({ userName, room_id, team_name }) => {
+  if(
+    rooms[room_id] && 
+    (!rooms[room_id].config.privateRoom ||
+      rooms[room_id].state.privateList.includes(userName)) &&
+      rooms[room_id].state.cur_memCount < rooms[room_id].config.max_perRoom
+  )
+  {
+    //(only run if room exists) and (user is allowed if private) and (space is there)
+
+    //quit from prev room and try again
+
+    let user = getUser(userName);
+    if (user.room_id) {
+      //already in a group don't allow
+      throw new Error("User already in room");
+    }
+
+    //successful (user will now be added)
+    
+    if (
+      team_name &&
+      rooms[room_id].team[team_name] &&
+      rooms[room_id].teams[team_name].length <
+        rooms[room_id].config.max_perTeam
+    ) {
+      //if user passes a team and that team exist and there is space in that team
+      rooms[room_id].teams[team_name].push(userName);
+      } else {
+        //else bench the user
+        team_name = "";
+        rooms[room_id].state.bench.push(userName);
+      }
+
+      updateUser({ userName:userName, room_id:room_id, team_name:team_name});
+
+      //user has been added to bench or a Team
+      rooms[room_id].state.cur_memCount += 1;
+      rooms[room_id].state.profilePicture[userName] = user.profilePicture;
+      return rooms[room_id];
+    }
+    throw new Error("The User doesn't meet the specifications");
+  };
 
 module.exports = {
   createRoom,
