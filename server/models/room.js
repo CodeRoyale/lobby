@@ -201,9 +201,41 @@ const removeUserFromRoom = ({ userName }) => {
   return rooms[room_id];
 };
 
+const joinTeam = ({ userName, team_name}) => {
+  const user = getUser(userName);
+  room = rooms[user.room_id];
+  // only run if user and room exits and user is in that room
+  // and there is space
+  if (
+    room &&
+    room.teams[team_name] &&
+    room.teams[team_name].length < room.config.max_perTeam
+  ) {
+    if (user.team_name) {
+      //ditch prev team
+      throw new Error("Already in a team");
+    }
+
+    // remove from bench
+    let newBench = rooms[user.room_id].state.bench.filter(
+      (ele) => ele != userName
+    );
+    rooms[user.room_id].state.bench = newBench;
+
+    //in new team
+    rooms[user.room_id].teams[team_name].push(userName);
+
+    updateUser({ userName:userName,  team_name: team_name });
+    return rooms[user.room_id].teams[team_name];
+  }
+  throw new Error("The User doesn't meet the specifications to join the team");
+};
+
 
 
 module.exports = {
   createRoom,
   joinRoom,
+  removeUserFromRoom,
+  joinTeam,
 };
