@@ -4,7 +4,7 @@
 import { setRoom } from "../controllers/userController";
 import { ROOM_UPDATED } from "../socketActions/serverActions";
 import { encryptData } from "../utils/auth";
-import { updateUser } from "user";
+import { updateUser , getUser, getUserData} from "user";
 
 // this is my db for now
 rooms = {};
@@ -168,8 +168,42 @@ const joinRoom = ({ userName, room_id, team_name }) => {
       return rooms[room_id];
     }
     throw new Error("The User doesn't meet the specifications");
-  };
+};
+
+const removeUserFromRoom = ({ userName }) => {
+  const { room_id, team_name } = getUser(userName);
+
+  // if user is a admin then no leave only delete possible
+  // it cause of the way i am storing room_id ( == adminName)
+  if (rooms[room_id].config.admin === userName) {
+    throw new Error("The User is admin. Can't kick admin.");
+  }
+  if (team_name) {
+    // if user has joined a team
+    let newTeam = rooms[room_id].teams[team_name].filter(
+      (ele) => ele !== userName
+    );
+    rooms[room_id].teams[team_name] = newTeam;
+    // no need to send team_name as this will only be sent to
+    // ppl in "same team"
+  } else {
+    // if user is on a bench
+    let newBench = rooms[room_id].state.bench.filter(
+      (ele) => ele !== userName
+    );
+    rooms[room_id].state.bench = newBench;
+  }
+
+  // removed
+  rooms[room_id].state.cur_memCount -= 1;
+  updateUser({ userName:userName,  team_name:"" , room_id: "" });
+
+  return rooms[room_id];
+};
+
+
 
 module.exports = {
   createRoom,
+  joinRoom,
 };

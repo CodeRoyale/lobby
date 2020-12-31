@@ -47,7 +47,26 @@ const updateUser = ({userName, socket_id, room_id, team_name, rank, profilePictu
     return users[userName];
 };
 
+const getUser = (userName) => {
+    try {
+      return users[userName];
+    } catch (err) {
+      return err.message || false;
+    }
+  };
+
+const getUserData = () => {
+    // need proper authorizations
+    try {
+      return users;
+    } catch (err) {
+      return err.message || false;
+    }
+  };
+
 module.exports = {
     addUser,
     updateUser,
-  };
+    getUser,
+    getUserData,
+};
