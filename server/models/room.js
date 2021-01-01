@@ -167,8 +167,6 @@ const joinRoom = (user ,room_id, team_name) => {
       rooms[room_id].state.cur_memCount += 1;
       rooms[room_id].state.profilePicture[userName] = user.profilePicture;
       return rooms[room_id];
-    }
-    throw new Error("The User doesn't meet the specifications");
 };
 
 const removeUserFromRoom = (user) => {
@@ -213,6 +211,8 @@ const joinTeam = (user) => {
     !room.teams[team_name] &&
     room.teams[team_name].length > room.config.max_perTeam
   ) {
+    throw new Error("The User doesn't meet the specifications to join the team");
+  }
     if (user.team_name) {
       //ditch prev team
       throw new Error("Already in a team");
@@ -229,8 +229,6 @@ const joinTeam = (user) => {
 
     
     return rooms[user.room_id].teams[team_name];
-  }
-  throw new Error("The User doesn't meet the specifications to join the team");
 };
 
 const closeRoom = (user, forceCloseRoom = false ) => {
@@ -282,4 +280,5 @@ module.exports = {
   removeUserFromRoom,
   joinTeam,
   closeRoom,
+  createTeam,
 };
