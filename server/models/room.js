@@ -209,9 +209,9 @@ const joinTeam = (user) => {
   // only run if user and room exits and user is in that room
   // and there is space
   if (
-    room &&
-    room.teams[team_name] &&
-    room.teams[team_name].length < room.config.max_perTeam
+    !room &&
+    !room.teams[team_name] &&
+    room.teams[team_name].length > room.config.max_perTeam
   ) {
     if (user.team_name) {
       //ditch prev team
@@ -243,7 +243,7 @@ const closeRoom = (user, forceCloseRoom = false ) => {
     throw new Error("The User doesn't meet the specifications to close the room");
    }
    if (!forceCloseRoom && (room.competition.contestOn || room.veto.vetoOn))
-     {
+   {
       throw new Error("There is a ongoing competition in the room. Please finish the competition and try closing the room.");
      }
     // everyone from room bench
@@ -257,6 +257,23 @@ const closeRoom = (user, forceCloseRoom = false ) => {
     // delete the stupid room
     delete rooms[room_id];
     return allMembers;
+}
+
+const createTeam = (user , team_name) => {
+  const {userName, room_id} = user;
+  const room = rooms[room_id]
+  if (!room_id || room.config.admin !== userName) {
+    throw new Error("Only admin can do this");
+  }
+  if (
+    Object.keys(room.teams).length <
+      room.config.max_teams &&
+    !room.teams[team_name]
+  ) {
+    room.teams[team_name] = [];
+    return rooms[room_id].teams;
+  }
+  return false;
 }
 
 module.exports = {
