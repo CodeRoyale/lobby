@@ -284,44 +284,41 @@ const leaveTeam = (user) => {
 };
 
 const addPrivateList = (user, privateList) => {
-  const { userName, room_id} = user;
-  const room = rooms[room_id];
+	const { userName, room_id } = user;
+	const room = rooms[room_id];
 
-  if (!room && room.config.admin !== userName && !room.config.privateRoom) {
-    throw new Error("Only admin can do this");
-  };
-  privateList.forEach((ele) => {
-    if (!room.state.privateList.includes(ele)) {
-      rooms[room_id].state.privateList.push(ele);
-    }
-  });
-  return rooms[room_id].state.privateList;
+	if (!room && room.config.admin !== userName && !room.config.privateRoom) {
+		throw new Error('Only admin can do this');
+	}
+	privateList.forEach((ele) => {
+		if (!room.state.privateList.includes(ele)) {
+			rooms[room_id].state.privateList.push(ele);
+		}
+	});
+	return rooms[room_id].state.privateList;
 };
 
-const getRoomData = (user ,room_id) => {
+const getRoomData = (user, room_id) => {
+	const { room_id } = user;
 
-  const {room_id } = user;
-  
-  if (room_id !== room_id) 
-  throw new Error("User not in room");
-  return rooms[room_id];
-  
+	if (room_id !== room_id) throw new Error('User not in room');
+	return rooms[room_id];
 };
 
 module.exports = {
-  createRoom,
-  joinRoom,
-  removeUserFromRoom,
-  joinTeam,
-  closeRoom,
-  createTeam,
-  addPrivateList,
 	createRoom,
 	joinRoom,
 	removeUserFromRoom,
 	joinTeam,
 	closeRoom,
 	createTeam,
-  leaveTeam,
-  getRoomData,
+	addPrivateList,
+	createRoom,
+	joinRoom,
+	removeUserFromRoom,
+	joinTeam,
+	closeRoom,
+	createTeam,
+	leaveTeam,
+	getRoomData,
 };
