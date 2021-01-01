@@ -298,6 +298,16 @@ const addPrivateList = (user, privateList) => {
   return rooms[room_id].state.privateList;
 };
 
+const getRoomData = (user ,room_id) => {
+
+  const {room_id } = user;
+  
+  if (room_id !== room_id) 
+  throw new Error("User not in room");
+  return rooms[room_id];
+  
+};
+
 module.exports = {
   createRoom,
   joinRoom,
@@ -312,5 +322,6 @@ module.exports = {
 	joinTeam,
 	closeRoom,
 	createTeam,
-	leaveTeam,
+  leaveTeam,
+  getRoomData,
 };
