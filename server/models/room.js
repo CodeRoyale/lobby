@@ -259,7 +259,7 @@ const closeRoom = (user, forceCloseRoom = false ) => {
 
 const createTeam = (user , team_name) => {
   const {userName, room_id} = user;
-  const room = rooms[room_id]
+  const room = rooms[room_id];
   if (!room_id || room.config.admin !== userName) {
     throw new Error("Only admin can do this");
   }
@@ -274,6 +274,21 @@ const createTeam = (user , team_name) => {
   return false;
 }
 
+const addPrivateList = (user, privateList) => {
+  const { userName, room_id} = user;
+  const room = rooms[room_id];
+
+  if (!room && room.config.admin !== userName && !room.config.privateRoom) {
+    throw new Error("Only admin can do this");
+  };
+  privateList.forEach((ele) => {
+    if (!room.state.privateList.includes(ele)) {
+      rooms[room_id].state.privateList.push(ele);
+    }
+  });
+  return rooms[room_id].state.privateList;
+};
+
 module.exports = {
   createRoom,
   joinRoom,
@@ -281,4 +296,5 @@ module.exports = {
   joinTeam,
   closeRoom,
   createTeam,
+  addPrivateList,
 };
