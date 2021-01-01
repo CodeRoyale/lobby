@@ -129,20 +129,20 @@ const createRoom = (config) => {
 const joinRoom = (user ,room_id, team_name) => {
   const {userName} = user;
   if(
-    rooms[room_id] && 
+    !rooms[room_id] && 
     (!rooms[room_id].config.privateRoom ||
-      rooms[room_id].state.privateList.includes(userName)) &&
-      rooms[room_id].state.cur_memCount < rooms[room_id].config.max_perRoom
+      !rooms[room_id].state.privateList.includes(userName)) &&
+      rooms[room_id].state.cur_memCount > rooms[room_id].config.max_perRoom
   )
   {
+    throw new Error("The User doesn't meet the specifications");
+  }
     //(only run if room exists) and (user is allowed if private) and (space is there)
 
     //quit from prev room and try again
-
-    
-    if (user.room_id) {
-      //already in a group don't allow
-      throw new Error("User already in room");
+  if (user.room_id) {
+    //already in a group don't allow
+    throw new Error("User already in room");
     }
 
     //successful (user will now be added)
