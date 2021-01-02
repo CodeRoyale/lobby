@@ -305,6 +305,68 @@ const getRoomData = (user, room_id) => {
   return rooms[room_id];
 };
 
+/**
+ *
+ * @param {sting} userName -  user's userName
+ * @param {string} room_id - user's room_id
+ * @param {sting} team_name -  user's team_name (easier of pin point the updation field)
+ * @param {[quesID]} votes - user's votes for the veto
+ * @returns {object} - { status , err }
+ *                     0 - vote not registered (err)
+ *                     1 - vote registered sucessfully
+ *                     2 - vote is completed (user can stop if needed)
+ * ? should support for empty team_name be added
+ * TODO : @naven @chirag test this fucntion
+ * ! Should'nt be integrated without testing
+ */
+const updateVetoVotes = ({ room_id, userName, team_name, votes }) => {
+  if (!room_id || !userName || !votes || !team_name) {
+    return { status: 0, error: "Required params are not passed." };
+  }
+
+  const room = rooms[room_id];
+  // * user should be in a team
+  if (!room || !room[team_name] || !room.teams[team_name].includes(userName)) {
+    return { status: 0, error: "User doesn't meet the requirements." };
+  }
+
+  const { vetoOn, voted, allQuestions, max_vote } = room.competition.veto;
+  // * veto should be on
+  // * user should have not voted
+  if (!vetoOn || voted.includes(userName)) {
+    return { status: 0, error: "Room doesn't meet the requirements." };
+  }
+
+  // valid votes only
+  votes = votes.filter((id) => allQuestions.includes(id));
+  // votes should be unique
+  votes = [...new Set(votes)];
+  // should not excede max_votes allowed
+  // we will only take Min(votes.length, max_vote) votes
+  if (votes.length > max_vote) votes = votes.slice(0, max_vote);
+  // note votes
+  votes.forEach((id) => {
+    rooms[room_id].competition.veto.votes[id] += 1;
+  });
+  rooms[room_id].competition.veto.voted.push(userName);
+
+  // voted users = total users
+  // TODO --> @naveen
+  //           * NOW -> O(n*m)
+  //           * store calculated in obj to make in O(n)
+  let totalRequired = 0;
+  Object.keys(rooms[room_id].teams).forEach((team_name) => {
+    totalRequired += rooms[room_id].teams[team_name].length;
+  });
+
+  if (totalRequired === rooms[room_id].competition.veto.voted.length) {
+    // we got all the required votes
+    return { status: 2 };
+  }
+
+  return { status: 1 };
+};
+
 module.exports = {
   createRoom,
   joinRoom,
@@ -321,4 +383,5 @@ module.exports = {
   createTeam,
   leaveTeam,
   getRoomData,
+  updateVetoVotes,
 };
