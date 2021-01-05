@@ -54,15 +54,18 @@ const getProperValue = (field, passedValue) => {
 	return Math.min(ROOM_LIMITS[field], passedValue || ROOM_DEFAULTS[field]);
 };
 
-const createRoom = (config, user) => {
+const createRoom = (roomConfig, user) => {
 	// TODO : @sastaachar
 
 	// TODO : refactor casing (camel -> _ )
 
 	// check req params
 
-	if (!config.userName) {
-		throw new Error('Admin tera baap hai kya ?');
+	if (!roomConfig.userName) {
+		return {
+			status: 0,
+			error: 'You dont have the privilege to do',
+		};
 	}
 
 	//* Start creating a new room
@@ -70,48 +73,54 @@ const createRoom = (config, user) => {
 	// we nee a *unique* room_id
 
 	// ! change this fn
-	const room_id = auth.encryptData(config.userName);
+	const room_id = auth.encryptData(roomConfig.userName);
 
+	if (rooms[room_id]) {
+		return {
+			status: 0,
+			error: 'There is already a room present by the id given',
+		};
+	}
 	const room_obj = {
 		config: {
 			id: room_id,
-			admin: config.userName,
-			max_teams: getProperValue('max_teams', config['max_teams']),
-			max_perTeam: getProperValue('max_perTeam', config['max_perTeam']),
-			privateRoom: config.privateRoom === false,
-			max_perRoom: getProperValue('max_perRoom', config['max_perRoom']),
+			admin: roomConfig.userName,
+			max_teams: getProperValue('max_teams', roomConfig['max_teams']),
+			max_perTeam: getProperValue('max_perTeam', roomConfig['max_perTeam']),
+			privateRoom: roomConfig.privateRoom === false,
+			max_perRoom: getProperValue('max_perRoom', roomConfig['max_perRoom']),
 			createdAt: Date.now(),
 		},
 		state: {
 			privateList: [],
 			cur_memCount: 1,
 			banList: [],
-			bench: [config.admin],
-			profilePictures: { [config.admin]: user.profilePicture },
+			bench: [roomConfig.userName],
+			profilePictures: { [roomConfig.userName]: user.profilePicture },
 		},
 		competition: {
 			questions: {},
 			max_questions: getProperValue(
 				'competitionMaxQues',
-				config['competitionMaxQues']
+				roomConfig['competitionMaxQues']
 			),
 			contestStartedAt: null,
 			contnetEndedAt: null,
 			contestOn: false,
 			timeLimit: getProperValue(
 				'competitionTimelimit',
-				config['competitionTimelimit']
+				roomConfig['competitionTimelimit']
 			),
 			veto: {
 				allQuestions: {},
 				votes: {},
 				voted: [],
 				vetoOn: false,
-				max_vote: getProperValue('vetoMaxVote', config['vetoMaxVote']),
-				timeLimit: getProperValue('vetoTimeLimit', config['vetoTimeLimit']),
+				max_vote: getProperValue('vetoMaxVote', roomConfig['vetoMaxVote']),
+				timeLimit: getProperValue('vetoTimeLimit', roomConfig['vetoTimeLimit']),
 				quesCount: getProperValue(
 					'vetoQuestionCount',
-					config['vetoQuestionCount']
+					roomConfig['vetoQuestionCount']
 				),
 			},
 			scoreboard: {},
@@ -121,11 +130,11 @@ const createRoom = (config, user) => {
 
 	//* Store the room now
 	rooms[room_id] = room_obj;
-	return room_obj;
+	return { status: 1, returnObj: room_obj };
 };
 
 const joinRoom = (user, room_id, team_name) => {
-	const { userName } = user;
+	const { userName, profilePicture } = user;
 	if (
 		!rooms[room_id] &&
 		(!rooms[room_id].config.privateRoom ||
@@ -159,7 +168,7 @@ const joinRoom = (user, room_id, team_name) => {
 
 	//user has been added to bench or a Team
 	rooms[room_id].state.cur_memCount += 1;
-	rooms[room_id].state.profilePicture[userName] = user.profilePicture;
+	rooms[room_id].state.profilePictures.userName = profilePicture;
 	return { status: 1, returnObj: rooms[room_id] };
 };
 

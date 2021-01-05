@@ -49,28 +49,31 @@ const createRoom = (config, { socket }) => {
 
 	// createRoom function to be called by the controller.
 	const room_obj = RoomModel.createRoom(config, user);
-	const room_id = room_obj.config.id;
-
+	if (room_obj.status === 0) {
+		return { error: room_id.error };
+	}
+	const room_id = room_obj.returnObj.config.id;
+	console.log(room_id);
 	const user_obj = UserModel.updateUser(config.userName, room_id);
 	socket.join(room_id);
 	// created room
 	// user already has an active room
-	//return { error: err.message };
+	return room_obj.returnObj;
 };
 
 // users connecting to room
 // TODO -> refactor this fn if should return error
 const joinRoom = ({ userName, room_id, team_name }, { socket }) => {
-	const room_obj = RoomModel.joinRoom(userName, room_id, team_name);
-	const user_obj = UserModel.updateUser(userName, room_id, team_name);
 	const user = UserModel.getUser(userName);
+	const room_obj = RoomModel.joinRoom(user, room_id, team_name);
+	const user_obj = UserModel.updateUser(userName, room_id, team_name);
 	socket.join(room_id);
 	socket.to(room_id).emit(ROOM_UPDATED, {
 		type: JOINED_ROOM,
 		data: { userName, profilePicture: user.profilePicture },
 	});
 	console.log(userName, ' joined from ', room_id);
-	return true;
+	return room_obj.returnObj;
 };
 
 const removeUserFromRoom = ({ userName }) => {
