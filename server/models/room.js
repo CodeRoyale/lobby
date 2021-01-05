@@ -1,10 +1,8 @@
 //* import utils
 
 //// using relative paths here (need to find better)
-import { setRoom, setTeam } from '../controllers/userController';
-import { ROOM_UPDATED } from '../socketActions/serverActions';
-import { encryptData } from '../utils/auth';
-import { updateUser, getUser, getUserData } from 'user';
+
+const auth = require('../utils/auth');
 
 // this is my db for now
 rooms = {};
@@ -72,7 +70,7 @@ const createRoom = (config) => {
 	// we nee a *unique* room_id
 
 	// ! change this fn
-	const room_id = encryptData(config.userName);
+	const room_id = auth.encryptData(config.userName);
 
 	const room_obj = {
 		config: {
@@ -311,10 +309,10 @@ const addPrivateList = (user, privateList) => {
 	return { status: 1, returnObj: rooms[room_id].state.privateList };
 };
 
-const getRoomData = (user, room_id) => {
+const getRoomData = (user, rooms_id) => {
 	const { room_id } = user;
 
-	if (room_id !== room_id) return { status: 0, error: 'User not in room' };
+	if (room_id !== rooms_id) return { status: 0, error: 'User not in room' };
 	return { status: 1, returnObj: rooms[room_id] };
 };
 
