@@ -1,5 +1,5 @@
 const { encryptData } = require('../utils/auth');
-const { setRoom, getUser, setTeam, mapNameToId } = require('./userController');
+//const { setRoom, getUser, setTeam, mapNameToId } = require('./userController');
 const { getQuestions, getTestcase } = require('../utils/qapiConn');
 const { ROOM_DEFAULTS, ROOM_LIMITS } = require('./config');
 const { submitCode } = require('../utils/codeExecution');
@@ -41,21 +41,21 @@ resolvers = {};
 // room_id will be admin name
 
 const createRoom = (config, { socket }) => {
-	const user = getUser(config.userName);
+	const user = UserModel.getUser(config.userName);
 	if (user.room_id) {
 		// please leave current room
 		return false;
 	}
 
 	// createRoom function to be called by the controller.
-	const room_obj = RoomModel.createRoom(config);
+	const room_obj = RoomModel.createRoom(config, user);
 	const room_id = room_obj.config.id;
 
 	const user_obj = UserModel.updateUser(config.userName, room_id);
 	socket.join(room_id);
 	// created room
 	// user already has an active room
-	return { error: err.message };
+	//return { error: err.message };
 };
 
 // users connecting to room

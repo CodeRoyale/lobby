@@ -54,7 +54,7 @@ const getProperValue = (field, passedValue) => {
 	return Math.min(ROOM_LIMITS[field], passedValue || ROOM_DEFAULTS[field]);
 };
 
-const createRoom = (config) => {
+const createRoom = (config, user) => {
 	// TODO : @sastaachar
 
 	// TODO : refactor casing (camel -> _ )
