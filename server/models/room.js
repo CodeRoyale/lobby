@@ -214,8 +214,8 @@ const removeUserFromRoom = (user) => {
 	return { status, returnObj: rooms[room_id] };
 };
 
-const joinTeam = (user) => {
-	const { userName, team_name } = user;
+const joinTeam = (user, team_name) => {
+	const { userName } = user;
 	room = rooms[user.room_id];
 	// only run if user and room exits and user is in that room
 	// and there is space

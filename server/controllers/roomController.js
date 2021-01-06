@@ -120,46 +120,19 @@ const createTeam = ({ userName, team_name }, { socket }) => {
 };
 
 const joinTeam = ({ userName, team_name }, { socket }) => {
-	try {
-		const user = getUser(userName),
-			room = rooms[user.room_id];
-		// only run if user and room exits and user is in that room
-		// and there is space
-		if (
-			room &&
-			room.teams[team_name] &&
-			room.teams[team_name].length < room.config.max_perTeam
-		) {
-			if (user.team_name) {
-				//ditch prev team
-				throw new Error('Already in a team');
-			}
-
-			// remove from bench
-			let newBench = rooms[user.room_id].state.bench.filter(
-				(ele) => ele != userName
-			);
-			rooms[user.room_id].state.bench = newBench;
-
-			//in new team
-			rooms[user.room_id].teams[team_name].push(userName);
-			setTeam(userName, team_name);
-
-			// tell team-mates
-			// tell team-mates
-			socket.join(`${user.room_id}/${team_name}`);
-			socket.to(user.room_id).emit(ROOM_UPDATED, {
-				type: JOINED_TEAM,
-				data: { userName, team_name },
-			});
-
-			return rooms[user.room_id].teams[team_name];
-		}
-		return false;
-	} catch (err) {
-		return { error: err.message };
+	const user = UserModel.getUser(userName);
+	const room_obj = RoomModel.joinTeam(user, team_name);
+	if (room_obj.status === 0) {
+		return { err: returnObj.error };
 	}
-	//const user = UserModel.getUser(userName);
+	const user_obj = UserModel.updateUser(userName, team_name);
+	socket.join(`${user.room_id}/${team_name}`);
+	socket.to(user.room_id).emit(ROOM_UPDATED, {
+		type: JOINED_TEAM,
+		data: { userName, team_name },
+	});
+
+	return room_obj.returnObj;
 };
 
 const leaveTeam = ({ userName }, { socket }) => {
