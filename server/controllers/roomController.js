@@ -136,30 +136,17 @@ const joinTeam = ({ userName, team_name }, { socket }) => {
 };
 
 const leaveTeam = ({ userName }, { socket }) => {
-	try {
-		const { room_id, team_name } = getUser(userName);
-		// check if in a room and in a team
-		if (room_id && team_name) {
-			let newTeam = rooms[room_id].teams[team_name].filter(
-				(ele) => ele !== userName
-			);
-			rooms[room_id].teams[team_name] = newTeam;
-			rooms[room_id].state.bench.push(userName);
-			setTeam(userName, '');
-
-			// tell eveyone
-			socket.leave(`${room_id}/${team_name}`);
-			socket.to(room_id).emit(ROOM_UPDATED, {
-				type: LEFT_TEAM,
-				data: { userName, team_name },
-			});
-
-			return true;
-		}
-		return false;
-	} catch (err) {
-		return { error: err.message };
+	const user = UserModel.getUser(userName);
+	const room_obj = RoomModel.leaveTeam(user);
+	if (room_obj.status === 0) {
+		return { err: returnObj.error };
 	}
+	socket.leave(`${room_id}/${team_name}`);
+	socket.to(room_id).emit(ROOM_UPDATED, {
+		type: LEFT_TEAM,
+		data: { userName, team_name },
+	});
+	return room_obj.returnObj;
 };
 
 const closeRoom = ({ userName }, { socket }) => {
