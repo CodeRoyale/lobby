@@ -172,6 +172,16 @@ const joinRoom = (user, room_id, team_name) => {
 	return { status: 2, returnObj: rooms[room_id] };
 };
 
+/**
+ *
+ * @param {object} user -  { userName, room_id, team_name }
+ * @returns {object} - { status , err }
+ *                     0 - Can't kick , He's Admin
+ *                     1 - if user is in a team.
+ *                     2 - user is only in the bench
+ * TODO : @naven @chirag test this function
+ * ! Should'nt be integrated without testing
+ */
 const removeUserFromRoom = (user) => {
 	const { userName, room_id, team_name } = user;
 
@@ -181,8 +191,6 @@ const removeUserFromRoom = (user) => {
 		return { status: 0, error: "The User is admin. Can't kick admin." };
 	}
 
-	// status = 1 => if user is in a team.
-	// status = 2 => user is only in the bench
 	let status = undefined;
 	if (team_name) {
 		// if user has joined a team
