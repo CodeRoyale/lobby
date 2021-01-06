@@ -148,7 +148,7 @@ const joinRoom = (user, room_id, team_name) => {
 	//quit from prev room and try again
 	if (user.room_id) {
 		//already in a group don't allow
-		return { status: 0, error: 'User already in room' };
+		return { status: 1, error: 'User already in room' };
 	}
 
 	//successful (user will now be added)
@@ -169,7 +169,7 @@ const joinRoom = (user, room_id, team_name) => {
 	//user has been added to bench or a Team
 	rooms[room_id].state.cur_memCount += 1;
 	rooms[room_id].state.profilePictures.userName = profilePicture;
-	return { status: 1, returnObj: rooms[room_id] };
+	return { status: 2, returnObj: rooms[room_id] };
 };
 
 const removeUserFromRoom = (user) => {
@@ -272,7 +272,11 @@ status :1 -> true
 */
 
 const createTeam = (user, team_name) => {
+	// if more teams are allowed
+	//if team_name is not already used
+	// and user is admin
 	const { userName, room_id } = user;
+	// if user not in room or not admin of the room
 	const room = rooms[room_id];
 	if (!room_id || room.config.admin !== userName) {
 		return { status: 0, error: 'Only admin can do this' };
