@@ -50,7 +50,7 @@ const createRoom = (config, { socket }) => {
 	// createRoom function to be called by the controller.
 	const room_obj = RoomModel.createRoom(config, user);
 	if (room_obj.status === 0) {
-		return { error: room_id.error };
+		return { err: room_obj.error };
 	}
 	const room_id = room_obj.returnObj.config.id;
 	console.log(room_id);
@@ -66,6 +66,9 @@ const createRoom = (config, { socket }) => {
 const joinRoom = ({ userName, room_id, team_name }, { socket }) => {
 	const user = UserModel.getUser(userName);
 	const room_obj = RoomModel.joinRoom(user, room_id, team_name);
+	if (room_obj.status === 0) {
+		return { err: room_obj.error };
+	}
 	const user_obj = UserModel.updateUser(userName, room_id, team_name);
 	socket.join(room_id);
 	socket.to(room_id).emit(ROOM_UPDATED, {
@@ -128,34 +131,17 @@ const removeUserFromRoom = ({ userName }) => {
 };
 
 const createTeam = ({ userName, team_name }, { socket }) => {
-	try {
-		// if more teams are allowed
-		//if team_name is not already used
-		// and user is admin
-		const { room_id } = getUser(userName);
-		// if user not in room or not admin of the room
-		if (!room_id || rooms[room_id].config.admin !== userName) {
-			throw new Error('Only admin can do this');
-		}
-
-		if (
-			Object.keys(rooms[room_id].teams).length <
-				rooms[room_id].config.max_teams &&
-			!rooms[room_id].teams[team_name]
-		) {
-			rooms[room_id].teams[team_name] = [];
-
-			// tell everyone
-			socket.to(room_id).emit(ROOM_UPDATED, {
-				type: TEAM_CREATED,
-				data: { team_name },
-			});
-			return rooms[room_id].teams;
-		}
-		return false;
-	} catch (err) {
-		return { error: err.message };
+	const user = UserModel.getUser(userName);
+	const { room_id } = user;
+	const room_obj = RoomModel.createTeam(user, team_name);
+	if (room_obj.status === 0) {
+		return { err: room_obj.error };
 	}
+	socket.to(room_id).emit(ROOM_UPDATED, {
+		type: TEAM_CREATED,
+		data: { team_name },
+	});
+	return room_obj.returnObj;
 };
 
 const joinTeam = ({ userName, team_name }, { socket }) => {
@@ -198,6 +184,7 @@ const joinTeam = ({ userName, team_name }, { socket }) => {
 	} catch (err) {
 		return { error: err.message };
 	}
+	//const user = UserModel.getUser(userName);
 };
 
 const leaveTeam = ({ userName }, { socket }) => {
