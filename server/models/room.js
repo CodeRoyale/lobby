@@ -180,24 +180,30 @@ const removeUserFromRoom = (user) => {
 	if (rooms[room_id].config.admin === userName) {
 		return { status: 0, error: "The User is admin. Can't kick admin." };
 	}
+
+	// status = 1 => if user is in a team.
+	// status = 2 => user is only in the bench
+	let status = undefined;
 	if (team_name) {
 		// if user has joined a team
 		let newTeam = rooms[room_id].teams[team_name].filter(
 			(ele) => ele !== userName
 		);
 		rooms[room_id].teams[team_name] = newTeam;
+		status = 1;
 		// no need to send team_name as this will only be sent to
 		// ppl in "same team"
 	} else {
 		// if user is on a bench
 		let newBench = rooms[room_id].state.bench.filter((ele) => ele !== userName);
 		rooms[room_id].state.bench = newBench;
+		status = 2;
 	}
 
 	// removed
 	rooms[room_id].state.cur_memCount -= 1;
 
-	return { status: 1, returnObj: rooms[room_id] };
+	return { status, returnObj: rooms[room_id] };
 };
 
 const joinTeam = (user) => {
