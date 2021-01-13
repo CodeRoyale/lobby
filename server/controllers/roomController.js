@@ -141,7 +141,7 @@ const leaveTeam = ({ userName }, { socket }) => {
 	if (room_obj.status === 0) {
 		return { err: returnObj.error };
 	}
-	socket.leave(`${room_id}/${team_name}`);
+	socket.leave(`${user.room_id}/${user.team_name}`);
 	socket.to(room_id).emit(ROOM_UPDATED, {
 		type: LEFT_TEAM,
 		data: { userName, team_name },
@@ -149,6 +149,7 @@ const leaveTeam = ({ userName }, { socket }) => {
 	return room_obj.returnObj;
 };
 
+<<<<<<< HEAD
 const closeRoom = ({ userName, forceCloseRoom }, { socket }) => {
 	const user = UserModel.getUser(userName);
 	const room_obj = RoomModel.closeRoom(user, forceCloseRoom);
@@ -172,6 +173,37 @@ const closeRoom = ({ userName, forceCloseRoom }, { socket }) => {
 	});
 	socket.emit(ROOM_CLOSED);
 	return true;
+=======
+const closeRoom = ({ userName }, { socket }) => {
+	const { room_id } = getUser(userName);
+	if (rooms[room_id] && rooms[room_id].config.admin === userName) {
+		// everyone from room bench
+		let allMembers = rooms[room_id].state.bench;
+		// from all teams
+		Object.keys(rooms[room_id].teams).forEach((team_name) => {
+			rooms[room_id].teams[team_name].forEach((user) => {
+				allMembers.push(user);
+			});
+		});
+		console.log(allMembers);
+		// not need to chage room data since we are going to delete it
+		allMembers.forEach((userName) => {
+			// this is a server action notify all
+			// TODO --> add kick all and remove functions for sockets
+			setRoom(userName, '');
+		});
+
+		// delete the stupid room
+		const dataToEmit = 'Room Closed';
+		socket.to(room_id).emit(ROOM_CLOSED, {
+			data: { dataToEmit },
+		});
+		socket.emit(ROOM_CLOSED);
+		delete rooms[room_id];
+		return true;
+	}
+	return false;
+>>>>>>> 78587ced924e2ac5d2f0668ac2c4c695926a0385
 };
 
 //TODO --> DELETE TEAM
@@ -185,24 +217,18 @@ const banMember = ({ room_id }) => {
 
 const addPrivateList = ({ userName, privateList }, { socket }) => {
 	// only private rooms can have private lists
-	let user = getUser(userName);
-	room = rooms[user.room_id];
-	room_id = user.room_id;
+	const user = UserModel.getUser(userName);
+	const room_obj = RoomModel.addPrivateList(user, privateList);
 
-	if (room && room.config.admin === userName && room.config.privateRoom) {
-		privateList.forEach((ele) => {
-			if (!room.state.privateList.includes(ele)) {
-				rooms[room_id].state.privateList.push(ele);
-			}
-		});
-		socket.to(room_id).emit(ROOM_UPDATED, {
-			type: ADDED_PRIVATE_MEMBER,
-			data: { privateList: rooms[room_id].state.privateList },
-		});
-		return rooms[room_id].state.privateList;
-	} else {
-		return false;
+	if (room_obj.status === 0) {
+		return { err: returnObj.error };
 	}
+
+	socket.to(user.room_id).emit(ROOM_UPDATED, {
+		type: ADDED_PRIVATE_MEMBER,
+		data: { privateList: room_obj.returnObj },
+	});
+	return room_obj.returnObj;
 };
 
 const handleUserDisconnect = ({ userName }) => {
