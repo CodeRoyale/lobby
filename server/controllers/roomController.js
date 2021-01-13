@@ -149,39 +149,29 @@ const leaveTeam = ({ userName }, { socket }) => {
 	return room_obj.returnObj;
 };
 
-const closeRoom = ({ userName }, { socket }) => {
-	try {
-		const { room_id } = getUser(userName);
-		if (rooms[room_id] && rooms[room_id].config.admin === userName) {
-			// everyone from room bench
-			let allMembers = rooms[room_id].state.bench;
-			// from all teams
-			Object.keys(rooms[room_id].teams).forEach((team_name) => {
-				rooms[room_id].teams[team_name].forEach((user) => {
-					allMembers.push(user);
-				});
-			});
-			console.log(allMembers);
-			// not need to chage room data since we are going to delete it
-			allMembers.forEach((userName) => {
-				// this is a server action notify all
-				// TODO --> add kick all and remove functions for sockets
-				setRoom(userName, '');
-			});
-
-			// delete the stupid room
-			const dataToEmit = 'Room Closed';
-			socket.to(room_id).emit(ROOM_CLOSED, {
-				data: { dataToEmit },
-			});
-			socket.emit(ROOM_CLOSED);
-			delete rooms[room_id];
-			return true;
-		}
-		return false;
-	} catch (err) {
-		return { error: err.message };
+const closeRoom = ({ userName, forceCloseRoom }, { socket }) => {
+	const user = UserModel.getUser(userName);
+	const room_obj = RoomModel.closeRoom(user, forceCloseRoom);
+	if (room_obj.status === 0) {
+		return { err: returnObj.error };
 	}
+
+	let allMembers = room_obj.returnObj;
+	console.log(allMembers);
+	// not need to chage room data since we are going to delete it
+	allMembers.forEach((userName) => {
+		// this is a server action notify all
+		// TODO --> add kick all and remove functions for sockets
+		UserModel.updateUser(userName, (room_id = ''));
+	});
+
+	// delete the stupid room
+	const dataToEmit = 'Room Closed';
+	socket.to(room_id).emit(ROOM_CLOSED, {
+		data: { dataToEmit },
+	});
+	socket.emit(ROOM_CLOSED);
+	return true;
 };
 
 //TODO --> DELETE TEAM

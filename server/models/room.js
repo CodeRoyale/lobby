@@ -247,8 +247,8 @@ const joinTeam = (user, team_name) => {
 };
 
 const closeRoom = (user, forceCloseRoom = false) => {
-	const room = rooms[room_id];
 	const { room_id, userName } = user;
+	const room = rooms[room_id];
 
 	if (!room && room.config.admin !== userName) {
 		return {
