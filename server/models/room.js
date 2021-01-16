@@ -357,7 +357,7 @@ const getRoomData = (user, rooms_id) => {
  * TODO : @naven @chirag test this function
  * ! Should'nt be integrated without testing
  */
-const updateVetoVotes = ({ room_id, userName, team_name, votes }) => {
+const registerVotes = ({ room_id, userName, team_name, votes }) => {
 	if (!room_id || !userName || !votes || !team_name) {
 		return { status: 0, error: 'Required params are not passed.' };
 	}
@@ -399,10 +399,18 @@ const updateVetoVotes = ({ room_id, userName, team_name, votes }) => {
 
 	if (totalRequired === rooms[room_id].competition.veto.voted.length) {
 		// we got all the required votes
-		return { status: 2 };
+		rooms[room_id].competition.veto.vetoOn = false;
+		let results = Object.entries(rooms[room_id].competition.veto.votes);
+		results = results
+			.sort((a, b) => b[1] - a[1])
+			.slice(0, rooms[room_id].competition.max_questions);
+		// take only qids
+		results = results.map((ele) => ele[0]);
+		rooms[room_id].competition.questions = results;
+		return { status: 2, returnObj: results };
 	}
 
-	return { status: 1 };
+	return { status: 1, returnObj: rooms[room_id].competition.veto.votes };
 };
 
 module.exports = {
@@ -421,5 +429,5 @@ module.exports = {
 	createTeam,
 	leaveTeam,
 	getRoomData,
-	updateVetoVotes,
+	registerVotes,
 };
