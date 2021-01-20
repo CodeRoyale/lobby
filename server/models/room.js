@@ -256,7 +256,10 @@ const closeRoom = (user, forceCloseRoom = false) => {
 			error: "The User doesn't meet the specifications to close the room",
 		};
 	}
-	if (!forceCloseRoom && (room.competition.contestOn || room.veto.vetoOn)) {
+	if (
+		!forceCloseRoom &&
+		(room.competition.contestOn || room.competition.veto.vetoOn)
+	) {
 		return {
 			status: 0,
 			error: 'There is a ongoing competition. Finish it first',
