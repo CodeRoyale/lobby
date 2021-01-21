@@ -230,69 +230,30 @@ const forwardMsg = ({ userName, content, toTeam }, { socket }) => {
 };
 
 const registerVotes = ({ userName, votes }, { socket }) => {
-	try {
-		const { room_id, team_name } = getUser(userName),
-			room = rooms[room_id],
-			{ vetoOn, voted, allQuestions, max_vote } = room.competition.veto;
-
-		// should be in a team
-		// veto should be on
-		// should not have already voted
-		if (!team_name || !vetoOn || voted.includes(userName)) {
-			throw new Error('Not in a team or voting stopped or already voted');
-		}
-
-		// valid votes only
-		votes = votes.filter((id) => allQuestions.includes(id));
-		// votes should be unique
-		votes = [...new Set(votes)];
-		// should not excede max_votes allowed
-		if (votes.length > max_vote) votes = votes.slice(0, max_vote);
-		// note votes
-		votes.forEach((id) => {
-			rooms[room_id].competition.veto.votes[id] += 1;
-		});
-		rooms[room_id].competition.veto.voted.push(userName);
-		socket.to(room_id).emit(USER_VOTED, { userName, votes });
-		socket.emit(USER_VOTED, { userName, votes });
-		// veto.votes.length == SUM(all teams.length)
-		// TODO -->
-		// NOW -> O(n*m)
-		// store calculated in obj to make in O(n)
-		let totalRequired = 0;
-		Object.keys(rooms[room_id].teams).forEach((team_name) => {
-			totalRequired += rooms[room_id].teams[team_name].length;
-		});
-
-		if (totalRequired === rooms[room_id].competition.veto.voted.length) {
-			// stop the default timer
-			clearTimeout(stopTimers[room_id].vetoTimer);
-
-			// stoping code
-			// TODO --> needs refactoring
-			rooms[room_id].competition.veto.vetoOn = false;
-			let results = Object.entries(rooms[room_id].competition.veto.votes);
-			results = results
-				.sort((a, b) => b[1] - a[1])
-				.slice(0, rooms[room_id].competition.max_questions);
-			// take only qids
-			results = results.map((ele) => ele[0]);
-			rooms[room_id].competition.questions = results;
-
-			socket.to(room_id).emit(VETO_STOP, results);
-			socket.emit(VETO_STOP, results);
-
-			// resolvers are stored here -> example of shitty coding
-			resolvers[room_id](results);
-		}
-
-		// cant return time or resolver funtions
-		// they are self referencing soo max call stack error
-
-		return rooms[room_id].competition.veto.votes;
-	} catch (err) {
-		return { error: err.message };
+	const { room_id, team_name } = UserModel.getUser(userName);
+	const room_obj = RoomModel.registerVotes({
+		room_id,
+		userName,
+		team_name,
+		votes,
+	});
+	if (room_obj.status === 0) {
+		return { err: returnObj.error };
 	}
+	socket.to(room_id).emit(USER_VOTED, { userName, votes });
+	socket.emit(USER_VOTED, { userName, votes });
+
+	if (room_obj.status === 2) {
+		clearTimeout(stopTimers[room_id].vetoTimer);
+		// stoping code
+		// TODO --> needs refactoring
+		socket.to(room_id).emit(VETO_STOP, room_obj.returnObj);
+		socket.emit(VETO_STOP, room_obj.returnObj);
+
+		// resolvers are stored here -> example of shitty coding
+		resolvers[room_id](room_obj.returnObj);
+	}
+	return room_obj.returnObj;
 };
 
 const doVeto = async (quesIds, room_id, count, socket) => {
