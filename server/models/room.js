@@ -418,10 +418,8 @@ const registerVotes = ({ room_id, userName, team_name, votes }) => {
 
 /**
  *
- * @param {sting} userName -  user's userName
- * @param {string} room_id - user's room_id
- * @param {sting} team_name -  user's team_name (easier of pin point the updation field)
- * @param {[quesID]} votes - user's votes for the veto
+ * @param {object} user -  user data
+ * @param {string} state - start or stop competition
  * @returns {object} - { status , err }
  *                     0 - vote not registered (err)
  *                     1 - vote registered sucessfully
@@ -432,7 +430,7 @@ const registerVotes = ({ room_id, userName, team_name, votes }) => {
  */
 const startCompetition = (user, state) => {
 	const { room_id } = user;
-	room = rooms[room_id];
+	const room = rooms[room_id];
 
 	if (state === 'start') {
 		room.competition.contestOn = true;
@@ -471,6 +469,44 @@ const startCompetitionRequirements = (user) => {
 	return { status: 1, returnObj: room };
 };
 
+const doVetoRequirements = ({ rooms_id }) => {
+	const room = rooms[room_id];
+	if (room.competition.contestOn || room.competition.veto.vetoOn) {
+		return { status: 0, error: 'Veto not allowed now.' };
+	}
+	return { status: 1, returnObj: room };
+};
+
+const doVeto = (quesIds, room_id, count, state) => {
+	// set the room state
+	const room = rooms[room_id];
+	if (state === 'start') {
+		rooms[room_id].competition.veto.vetoOn = true;
+		rooms[room_id].competition.veto.allQuestions = quesIds;
+
+		// iitailize votes with 0
+		rooms[room_id].competition.veto.votes = {};
+		rooms[room_id].competition.veto.voted = [];
+		quesIds.forEach((id) => {
+			rooms[room_id].competition.veto.votes[id] = 0;
+		});
+		return { status: 1 };
+	}
+
+	// no need to remove listeners
+	// all of them are volatile listners
+	// calculate veto results
+
+	room.competition.veto.vetoOn = false;
+	let results = Object.entries(room.competition.veto.votes);
+	results = results.sort((a, b) => b[1] - a[1]).slice(0, count);
+	// take only qids
+	results = results.map((ele) => ele[0]);
+	rooms[room_id].competition.questions = results;
+
+	return { status: 1, returnObj: results };
+};
+
 module.exports = {
 	createRoom,
 	joinRoom,
@@ -490,4 +526,6 @@ module.exports = {
 	registerVotes,
 	startCompetitionRequirements,
 	startCompetition,
+	doVeto,
+	doVetoRequirements,
 };

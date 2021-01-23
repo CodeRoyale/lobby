@@ -258,52 +258,24 @@ const registerVotes = ({ userName, votes }, { socket }) => {
 
 const doVeto = async (quesIds, room_id, count, socket) => {
 	return new Promise((resolve, reject) => {
-		try {
-			const room = rooms[room_id];
-			if (
-				rooms[room_id].competition.contestOn ||
-				rooms[room_id].competition.veto.vetoOn
-			) {
-				throw new Error('Veto not allowed now');
-			}
+		let state = 'start';
+		const room_check = RoomModel.doVetoRequirements({ room_id });
+		const room = room_check.returnObj;
 
-			// set the room state
-			rooms[room_id].competition.veto.vetoOn = true;
-			rooms[room_id].competition.veto.allQuestions = quesIds;
+		const room_obj = RoomModel.doVeto(quesIds, room_id, count, state);
+		socket.to(room_id).emit(VETO_START, quesIds);
+		socket.emit(VETO_START, quesIds);
 
-			// iitailize votes with 0
-			rooms[room_id].competition.veto.votes = {};
-			rooms[room_id].competition.veto.voted = [];
-			quesIds.forEach((id) => {
-				rooms[room_id].competition.veto.votes[id] = 0;
-			});
+		resolvers[room_id] = resolve;
+		state = 'stop';
+		stopTimers[room_id].vetoTimer = setTimeout(() => {
+			room_obj = RoomModel.doVeto(quesIds, room_id, count, state);
+			const results = room_obj.returnObj;
+			socket.to(room_id).emit(VETO_STOP, results);
+			socket.emit(VETO_STOP, results);
 
-			// tell every1 voting started
-			socket.to(room_id).emit(VETO_START, quesIds);
-			socket.emit(VETO_START, quesIds);
-
-			// shitty code here
-			resolvers[room_id] = resolve;
-			stopTimers[room_id].vetoTimer = setTimeout(() => {
-				// no need to remove listeners
-				// all of them are volatile listners
-				// calculate veto results
-
-				rooms[room_id].competition.veto.vetoOn = false;
-				let results = Object.entries(rooms[room_id].competition.veto.votes);
-				results = results.sort((a, b) => b[1] - a[1]).slice(0, count);
-				// take only qids
-				results = results.map((ele) => ele[0]);
-				rooms[room_id].competition.questions = results;
-
-				socket.to(room_id).emit(VETO_STOP, results);
-				socket.emit(VETO_STOP, results);
-
-				resolve(results);
-			}, room.competition.veto.timeLimit);
-		} catch (err) {
-			reject(err);
-		}
+			resolve(results);
+		}, room.competition.veto.timeLimit);
 	});
 };
 
@@ -325,7 +297,7 @@ const startCompetition = async ({ userName }, { socket }) => {
 	socket.to(room_id).emit(COMPETITION_STARTED, room_obj);
 	socket.emit(COMPETITION_STARTED, room_obj);
 
-	let state = 'stop';
+	state = 'stop';
 	stopTimers[room_id].competitionTimer = setTimeout(() => {
 		room_obj = RoomModel.startCompetition(user, state);
 		socket.to(room_id).emit(COMPETITION_STOPPED, room_obj.returnObj);
