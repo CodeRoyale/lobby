@@ -416,6 +416,61 @@ const registerVotes = ({ room_id, userName, team_name, votes }) => {
 	return { status: 1, returnObj: rooms[room_id].competition.veto.votes };
 };
 
+/**
+ *
+ * @param {sting} userName -  user's userName
+ * @param {string} room_id - user's room_id
+ * @param {sting} team_name -  user's team_name (easier of pin point the updation field)
+ * @param {[quesID]} votes - user's votes for the veto
+ * @returns {object} - { status , err }
+ *                     0 - vote not registered (err)
+ *                     1 - vote registered sucessfully
+ *                     2 - vote is completed (user can stop if needed)
+ * ? should support for empty team_name be added
+ * TODO : @naven @chirag test this function
+ * ! Should'nt be integrated without testing
+ */
+const startCompetition = (user, state) => {
+	const { room_id } = user;
+	room = rooms[room_id];
+
+	if (state === 'start') {
+		room.competition.contestOn = true;
+		room.competition.contestStartedAt = Date.now();
+		Object.keys(room.teams).forEach((ele) => {
+			room.competition.scoreboard[ele] = [];
+		});
+		return { status: 1, returnObj: room.competition };
+	}
+	rooms[room_id].competition.contestOn = false;
+	rooms[room_id].competition.contnetEndedAt = Date.now();
+	return { status: 2, returnObj: room.competition };
+};
+
+const startCompetitionRequirements = (user) => {
+	const { room_id } = user;
+	room = rooms[room_id];
+
+	// room exists
+	// user is admin
+	// 2 or more members are there
+	// 2 or more teams required
+	// each team should hav atleast member
+	// and no ongoing contest
+	if (
+		!room ||
+		room.config.admin !== userName ||
+		room.state.cur_memCount < 2 ||
+		Object.keys(room.teams).length < 2 ||
+		!atLeastPerTeam(room_id) ||
+		room.competition.contestOn ||
+		room.competition.veto.vetoOn
+	) {
+		return { status: 0, error: "Room doesn't meet the requirements." };
+	}
+	return { status: 1, returnObj: room };
+};
+
 module.exports = {
 	createRoom,
 	joinRoom,
@@ -433,4 +488,6 @@ module.exports = {
 	leaveTeam,
 	getRoomData,
 	registerVotes,
+	startCompetitionRequirements,
+	startCompetition,
 };

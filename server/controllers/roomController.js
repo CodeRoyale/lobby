@@ -308,56 +308,31 @@ const doVeto = async (quesIds, room_id, count, socket) => {
 };
 
 const startCompetition = async ({ userName }, { socket }) => {
-	try {
-		const { room_id } = getUser(userName),
-			room = rooms[room_id];
-
-		// room exists
-		// user is admin
-		// 2 or more members are there
-		// 2 or more teams required
-		// each team should hav atleast member
-		// and no ongoing contest
-		if (
-			!room ||
-			room.config.admin !== userName ||
-			room.state.cur_memCount < 2 ||
-			Object.keys(room.teams).length < 2 ||
-			!atLeastPerTeam(room_id) ||
-			room.competition.contestOn ||
-			room.competition.veto.vetoOn
-		) {
-			throw new Error('Room does not meet requirements');
-		}
-
-		console.log('Starting competition', userName);
-		// start veto now and wait for it to end
-		stopTimers[room_id] = {};
-		const allQuestions = await getQuestions(room.competition.veto.quesCount);
-		await doVeto(allQuestions, room_id, room.competition.max_questions, socket);
-
-		// start competition now
-		rooms[room_id].competition.contestOn = true;
-		rooms[room_id].competition.contestStartedAt = Date.now();
-		Object.keys(rooms[room_id].teams).forEach((ele) => {
-			rooms[room_id].competition.scoreboard[ele] = [];
-		});
-
-		socket.to(room_id).emit(COMPETITION_STARTED, rooms[room_id].competition);
-		socket.emit(COMPETITION_STARTED, rooms[room_id].competition);
-
-		// code for stopping competition
-		stopTimers[room_id].competitionTimer = setTimeout(() => {
-			rooms[room_id].competition.contestOn = false;
-			rooms[room_id].competition.contnetEndedAt = Date.now();
-			socket.to(room_id).emit(COMPETITION_STOPPED, rooms[room_id].competition);
-			socket.emit(COMPETITION_STOPPED, rooms[room_id].competition);
-		}, room.competition.timeLimit);
-
-		return rooms[room_id].competition;
-	} catch (err) {
-		return { error: err.message };
+	const user = UserModel.getUser(userName);
+	let state = 'start';
+	const room_check = RoomModel.startCompetitionRequirements(user);
+	if (room_check.status === 0) {
+		return { err: returnObj.error };
 	}
+	const room = room_check.returnObj;
+	const room_id = room.config.id;
+	console.log('Starting competition', userName);
+	stopTimers[room_id] = {};
+	const allQuestions = await getQuestions(room.competition.veto.quesCount);
+	await doVeto(allQuestions, room_id, room.competition.max_questions, socket);
+
+	const room_obj = RoomModel.startCompetition(user, state);
+	socket.to(room_id).emit(COMPETITION_STARTED, room_obj);
+	socket.emit(COMPETITION_STARTED, room_obj);
+
+	let state = 'stop';
+	stopTimers[room_id].competitionTimer = setTimeout(() => {
+		room_obj = RoomModel.startCompetition(user, state);
+		socket.to(room_id).emit(COMPETITION_STOPPED, room_obj.returnObj);
+		socket.emit(COMPETITION_STOPPED, room_obj.returnObj);
+	}, room.competition.timeLimit);
+
+	return room_obj.returnObj;
 };
 
 // @util function to check if all teams have atleast min_size member
