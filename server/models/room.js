@@ -507,6 +507,33 @@ const doVeto = (quesIds, room_id, count, state) => {
 	return { status: 1, returnObj: results };
 };
 
+const codeSubmissionRequirements = (room_id) => {
+	const room = rooms[room_id];
+	if (
+		rooms[room_id] &&
+		rooms[room_id].teams[team_name] &&
+		rooms[room_id].competition.contestOn &&
+		testcase !== null &&
+		langId !== null
+	) {
+		return { status: 0, error: 'Code Submission not allowed now.' };
+	}
+	return { status: 1, returnObj: room };
+};
+
+const codeSubmission = (room_id, state) => {
+	if (state === 'one-pass') {
+		if (!rooms[room_id].cd competition.scoreboard[team_name].includes(quesId))
+			rooms[room_id].competition.scoreboard[team_name].push(quesId);
+
+		return { status: 1 };
+	}
+
+	rooms[room_id].competition.contestOn = false;
+	rooms[room_id].competition.contnetEndedAt = Date.now();
+
+	return { status: 1, returnObj: rooms[rooms_id].competition };
+};
 module.exports = {
 	createRoom,
 	joinRoom,
@@ -528,4 +555,5 @@ module.exports = {
 	startCompetition,
 	doVeto,
 	doVetoRequirements,
+	codeSubmissionRequirements,
 };

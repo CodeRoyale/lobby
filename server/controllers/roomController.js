@@ -341,71 +341,53 @@ const codeSubmission = async (
 	{ userName, problemCode, code, langId },
 	{ socket }
 ) => {
-	try {
-		const quesId = problemCode;
-		const { room_id, team_name } = UserModel.getUser(userName);
-		const testcase = await getTestcase(problemCode);
+	const quesId = problemCode;
+	const { room_id, team_name } = UserModel.getUser(userName);
+	const testcase = await getTestcase(problemCode);
 
-		if (
-			rooms[room_id] &&
-			rooms[room_id].teams[team_name] &&
-			rooms[room_id].competition.contestOn &&
-			testcase !== null &&
-			langId !== null
-		) {
-			submitCode(testcase, code, langId, (dataFromSubmitCode) => {
-				let allPass = true;
-
-				dataFromSubmitCode.submissions.forEach((result) => {
-					if (result.status_id !== 3) {
-						allPass = false;
-						return;
-					}
-				});
-
-				// code submitted
-				socket.emit(CODE_SUBMITTED, {
-					data: dataFromSubmitCode,
-					sucess: allPass,
-				});
-
-				if (allPass) {
-					// tell everyone except user
-					if (
-						!rooms[room_id].competition.scoreboard[team_name].includes(quesId)
-					)
-						rooms[room_id].competition.scoreboard[team_name].push(quesId);
-
-					socket
-						.to(room_id)
-						.emit(SUCCESSFULLY_SUBMITTED, { quesId, team_name });
-
-					// if user's team solved all questions
-					// can also use Object.keys(rms.cpms.questions) and maybe <=
-					if (
-						rooms[room_id].competition.max_questions ===
-						rooms[room_id].competition.scoreboard[team_name].length
-					) {
-						if (stopTimers[room_id].competitionTimer)
-							clearTimeout(stopTimers[room_id].competitionTimer);
-						rooms[room_id].competition.contestOn = false;
-						rooms[room_id].competition.contnetEndedAt = Date.now();
-						socket
-							.to(room_id)
-							.emit(COMPETITION_STOPPED, rooms[room_id].competition);
-						socket.emit(COMPETITION_STOPPED, rooms[room_id].competition);
-					}
-				}
-			});
-
-			// code has been sent
-			return true;
-		} else {
-			return false;
-		}
-	} catch (err) {
-		return { error: err.message };
+	const room_check = RoomModel.codeSubmissionRequirements(room_id);
+	const room = room_check.returnObj;
+	if (room_check.status === 0) {
+		return { err: returnObj.error };
 	}
+	submitCode(testcase, code, langId, (dataFromSubmitCode) => {
+		let allPass = true;
+
+		dataFromSubmitCode.submissions.forEach((result) => {
+			if (result.status_id !== 3) {
+				allPass = false;
+				return;
+			}
+		});
+
+		// code submitted
+		socket.emit(CODE_SUBMITTED, {
+			data: dataFromSubmitCode,
+			sucess: allPass,
+		});
+
+		if (allPass) {
+			// tell everyone except user
+			let state = 'one-pass';
+			const room_obj = RoomModel.codeSubmission(room_id, state);
+
+			socket.to(room_id).emit(SUCCESSFULLY_SUBMITTED, { quesId, team_name });
+
+			// if user's team solved all questions
+			// can also use Object.keys(rms.cpms.questions) and maybe <=
+			if (
+				room.competition.max_questions ===
+				room.competition.scoreboard[team_name].length
+			) {
+				if (stopTimers[room_id].competitionTimer)
+					clearTimeout(stopTimers[room_id].competitionTimer);
+				state = 'all-pass';
+				const room_obj = RoomModel.codeSubmission(room_id, state);
+				socket.to(room_id).emit(COMPETITION_STOPPED, room_obj.returnObj);
+				socket.emit(COMPETITION_STOPPED, room_obj.returnObj);
+			}
+		}
+	});
 };
 
 module.exports = {
