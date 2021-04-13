@@ -523,7 +523,7 @@ const codeSubmissionRequirements = (room_id) => {
 
 const codeSubmission = (room_id, state) => {
 	if (state === 'one-pass') {
-		if (!rooms[room_id].cd competition.scoreboard[team_name].includes(quesId))
+		if (!rooms[room_id].competition.scoreboard[team_name].includes(quesId))
 			rooms[room_id].competition.scoreboard[team_name].push(quesId);
 
 		return { status: 1 };
