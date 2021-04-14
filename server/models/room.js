@@ -168,7 +168,7 @@ const joinRoom = (user, room_id, team_name) => {
 
 	//user has been added to bench or a Team
 	rooms[room_id].state.cur_memCount += 1;
-	rooms[room_id].state.profilePictures.userName = profilePicture;
+	rooms[room_id].state.profilePictures[userName] = profilePicture;
 	return { status: 2, returnObj: rooms[room_id] };
 };
 
