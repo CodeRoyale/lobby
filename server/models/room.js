@@ -367,7 +367,11 @@ const registerVotes = ({ room_id, userName, team_name, votes }) => {
 
 	const room = rooms[room_id];
 	// * user should be in a team
-	if (!room || !room[team_name] || !room.teams[team_name].includes(userName)) {
+	if (
+		!room ||
+		!room.teams[team_name] ||
+		!room.teams[team_name].includes(userName)
+	) {
 		return { status: 0, error: "User doesn't meet the requirements." };
 	}
 
@@ -446,7 +450,7 @@ const startCompetition = (user, state) => {
 };
 
 const startCompetitionRequirements = (user) => {
-	const { room_id } = user;
+	const { room_id, userName } = user;
 	room = rooms[room_id];
 
 	// room exists
@@ -469,7 +473,18 @@ const startCompetitionRequirements = (user) => {
 	return { status: 1, returnObj: room };
 };
 
-const doVetoRequirements = ({ rooms_id }) => {
+const atLeastPerTeam = (room_id, min_size = 1) => {
+	try {
+		for (const [name, memList] of Object.entries(rooms[room_id].teams)) {
+			if (memList.length < min_size) return false;
+		}
+		return true;
+	} catch (err) {
+		return { error: err.message };
+	}
+};
+
+const doVetoRequirements = ({ room_id }) => {
 	const room = rooms[room_id];
 	if (room.competition.contestOn || room.competition.veto.vetoOn) {
 		return { status: 0, error: 'Veto not allowed now.' };
