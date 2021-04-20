@@ -345,7 +345,7 @@ const codeSubmission = async (
 	const { room_id, team_name } = UserModel.getUser(userName);
 	const testcase = await getTestcase(problemCode);
 
-	const room_check = RoomModel.codeSubmissionRequirements(room_id);
+	const room_check = RoomModel.codeSubmissionRequirements(room_id, team_name);
 	const room = room_check.returnObj;
 	if (room_check.status === 0) {
 		return { err: returnObj.error };

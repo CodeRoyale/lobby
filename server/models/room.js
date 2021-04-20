@@ -522,7 +522,7 @@ const doVeto = (quesIds, room_id, count, state) => {
 	return { status: 1, returnObj: results };
 };
 
-const codeSubmissionRequirements = (room_id) => {
+const codeSubmissionRequirements = (room_id, team_name) => {
 	const room = rooms[room_id];
 	if (
 		rooms[room_id] &&
