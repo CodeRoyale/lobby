@@ -344,22 +344,24 @@ const codeSubmission = async (
 	const quesId = problemCode;
 	const { room_id, team_name } = UserModel.getUser(userName);
 	const testcase = await getTestcase(problemCode);
-
-	const room_check = RoomModel.codeSubmissionRequirements(room_id, team_name);
-	const room = room_check.returnObj;
+	const room_check = RoomModel.codeSubmissionRequirements(
+		room_id,
+		team_name,
+		testcase,
+		langId
+	);
 	if (room_check.status === 0) {
 		return { err: returnObj.error };
 	}
+	const room = room_check.returnObj;
 	submitCode(testcase, code, langId, (dataFromSubmitCode) => {
 		let allPass = true;
-
 		dataFromSubmitCode.submissions.forEach((result) => {
 			if (result.status_id !== 3) {
 				allPass = false;
-				return;
+				return false;
 			}
 		});
-
 		// code submitted
 		socket.emit(CODE_SUBMITTED, {
 			data: dataFromSubmitCode,
@@ -369,7 +371,13 @@ const codeSubmission = async (
 		if (allPass) {
 			// tell everyone except user
 			let state = 'one-pass';
-			const room_obj = RoomModel.codeSubmission(room_id, state);
+			const room_obj = RoomModel.codeSubmission(
+				room_id,
+				state,
+				team_name,
+				quesId
+			);
+			console.log(room_obj);
 
 			socket.to(room_id).emit(SUCCESSFULLY_SUBMITTED, { quesId, team_name });
 

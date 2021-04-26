@@ -522,7 +522,7 @@ const doVeto = (quesIds, room_id, count, state) => {
 	return { status: 1, returnObj: results };
 };
 
-const codeSubmissionRequirements = (room_id, team_name) => {
+const codeSubmissionRequirements = (room_id, team_name, testcase, langId) => {
 	const room = rooms[room_id];
 	if (
 		rooms[room_id] &&
@@ -531,12 +531,12 @@ const codeSubmissionRequirements = (room_id, team_name) => {
 		testcase !== null &&
 		langId !== null
 	) {
-		return { status: 0, error: 'Code Submission not allowed now.' };
+		return { status: 1, returnObj: room };
 	}
-	return { status: 1, returnObj: room };
+	return { status: 0, error: 'Code Submission not allowed now.' };
 };
 
-const codeSubmission = (room_id, state) => {
+const codeSubmission = (room_id, state, team_name, quesId) => {
 	if (state === 'one-pass') {
 		if (!rooms[room_id].competition.scoreboard[team_name].includes(quesId))
 			rooms[room_id].competition.scoreboard[team_name].push(quesId);
@@ -571,4 +571,5 @@ module.exports = {
 	doVeto,
 	doVetoRequirements,
 	codeSubmissionRequirements,
+	codeSubmission,
 };
