@@ -366,6 +366,7 @@ const codeSubmission = async (
 		socket.emit(CODE_SUBMITTED, {
 			data: dataFromSubmitCode,
 			sucess: allPass,
+			problemCode,
 		});
 
 		if (allPass) {
