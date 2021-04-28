@@ -381,7 +381,7 @@ const codeSubmission = async (
 			);
 			console.log(room_obj);
 
-			socket.to(room_id).emit(SUCCESSFULLY_SUBMITTED, { quesId, team_name });
+			socket.to(room_id).emit(SUCCESSFULLY_SUBMITTED, { problemCode, team_name });
 
 			// if user's team solved all questions
 			// can also use Object.keys(rms.cpms.questions) and maybe <=
