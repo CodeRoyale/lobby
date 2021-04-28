@@ -367,6 +367,7 @@ const codeSubmission = async (
 			data: dataFromSubmitCode,
 			sucess: allPass,
 			problemCode,
+			team_name
 		});
 
 		if (allPass) {
