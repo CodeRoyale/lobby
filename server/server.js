@@ -57,7 +57,7 @@ const io = socketio(server, {
       "Access-Control-Allow-Origin":
         process.env.NODE_ENV === "development"
           ? "http://localhost:3000"
-          : "https://coderoyaleclient.herokuapp.com", //or the specific origin you want to give access to,
+          : "https://coderoyale.netlify.app", //or the specific origin you want to give access to,
       "Access-Control-Allow-Credentials": true,
     };
     res.writeHead(200, headers);
