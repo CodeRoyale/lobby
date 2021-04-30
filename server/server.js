@@ -23,7 +23,7 @@ const server = http.createServer(app);
 // HACKER BOII
 var whitelist = [
   "http://localhost:3000",
-  "https://coderoyaleclient.herokuapp.com",
+  "https://coderoyale.netlify.app",
 ];
 var corsOptions = {
   origin: function (origin, callback) {
