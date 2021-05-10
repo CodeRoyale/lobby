@@ -547,7 +547,7 @@ const codeSubmission = (room_id, state, team_name, quesId) => {
 	rooms[room_id].competition.contestOn = false;
 	rooms[room_id].competition.contnetEndedAt = Date.now();
 
-	return { status: 1, returnObj: rooms[rooms_id].competition };
+	return { status: 1, returnObj: rooms[room_id].competition };
 };
 module.exports = {
 	createRoom,
