@@ -24,7 +24,7 @@ const {
 	USER_VOTED,
 } = require('../socketActions/serverActions');
 const RoomModel = require('../models/room');
-const UserModel = require('../models/user');
+const UserController = require('./userController');
 
 const { io } = require('../server');
 const { CLOSE_ROOM } = require('../socketActions/userActions');
@@ -41,7 +41,7 @@ resolvers = {};
 // room_id will be admin name
 
 const createRoom = (config, { socket }) => {
-	const user = UserModel.getUser(config.userName);
+	const user = UserController.getUser(config.userName);
 	if (user.room_id) {
 		// please leave current room
 		return false;
@@ -54,7 +54,10 @@ const createRoom = (config, { socket }) => {
 	}
 	const room_id = room_obj.returnObj.config.id;
 	console.log(room_id);
-	const user_obj = UserModel.updateUser({ userName: config.userName, room_id });
+	const user_obj = UserController.updateUser({
+		userName: config.userName,
+		room_id,
+	});
 	socket.join(room_id);
 	// created room
 	// user already has an active room
@@ -64,12 +67,12 @@ const createRoom = (config, { socket }) => {
 // users connecting to room
 // TODO -> refactor this fn if should return error
 const joinRoom = ({ userName, room_id, team_name }, { socket }) => {
-	const user = UserModel.getUser(userName);
+	const user = UserController.getUser(userName);
 	const room_obj = RoomModel.joinRoom(user, room_id, team_name);
 	if (room_obj.status === 0) {
 		return { err: room_obj.error };
 	}
-	const user_obj = UserModel.updateUser({ userName, room_id, team_name });
+	const user_obj = UserController.updateUser({ userName, room_id, team_name });
 	socket.join(room_id);
 	socket.to(room_id).emit(ROOM_UPDATED, {
 		type: JOINED_ROOM,
@@ -80,7 +83,7 @@ const joinRoom = ({ userName, room_id, team_name }, { socket }) => {
 };
 
 const removeUserFromRoom = ({ userName }) => {
-	const user = UserModel.getUser(userName);
+	const user = UserController.getUser(userName);
 	const { room_id, team_name } = user;
 	const room_obj = RoomModel.removeUserFromRoom(user);
 	if (room_obj.status === 0) {
@@ -106,7 +109,7 @@ const removeUserFromRoom = ({ userName }) => {
 };
 
 const createTeam = ({ userName, team_name }, { socket }) => {
-	const user = UserModel.getUser(userName);
+	const user = UserController.getUser(userName);
 	const { room_id } = user;
 	console.log(user);
 	const room_obj = RoomModel.createTeam(user, team_name);
@@ -121,12 +124,12 @@ const createTeam = ({ userName, team_name }, { socket }) => {
 };
 
 const joinTeam = ({ userName, team_name }, { socket }) => {
-	const user = UserModel.getUser(userName);
+	const user = UserController.getUser(userName);
 	const room_obj = RoomModel.joinTeam(user, team_name);
 	if (room_obj.status === 0) {
 		return { err: room_obj.error };
 	}
-	const user_obj = UserModel.updateUser({ userName, team_name });
+	const user_obj = UserController.updateUser({ userName, team_name });
 	socket.join(`${user.room_id}/${team_name}`);
 	socket.to(user.room_id).emit(ROOM_UPDATED, {
 		type: JOINED_TEAM,
@@ -137,13 +140,13 @@ const joinTeam = ({ userName, team_name }, { socket }) => {
 };
 
 const leaveTeam = ({ userName }, { socket }) => {
-	const user = UserModel.getUser(userName);
+	const user = UserController.getUser(userName);
 	const { room_id, team_name } = user;
 	const room_obj = RoomModel.leaveTeam(user);
 	if (room_obj.status === 0) {
 		return { err: returnObj.error };
 	}
-	const user_obj = UserModel.updateUser({ userName, team_name: '' });
+	const user_obj = UserController.updateUser({ userName, team_name: '' });
 	socket.leave(`${user.room_id}/${user.team_name}`);
 	socket.to(room_id).emit(ROOM_UPDATED, {
 		type: LEFT_TEAM,
@@ -153,7 +156,7 @@ const leaveTeam = ({ userName }, { socket }) => {
 };
 
 const closeRoom = ({ userName, forceCloseRoom }, { socket }) => {
-	const user = UserModel.getUser(userName);
+	const user = UserController.getUser(userName);
 	const { room_id } = user;
 	const room_obj = RoomModel.closeRoom(user, forceCloseRoom);
 	if (room_obj.status === 0) {
@@ -166,7 +169,7 @@ const closeRoom = ({ userName, forceCloseRoom }, { socket }) => {
 	allMembers.forEach((userName) => {
 		// this is a server action notify all
 		// TODO --> add kick all and remove functions for sockets
-		UserModel.updateUser({ userName, room_id: '', team_name: '' });
+		UserController.updateUser({ userName, room_id: '', team_name: '' });
 	});
 
 	// delete the stupid room
@@ -189,7 +192,7 @@ const banMember = ({ room_id }) => {
 
 const addPrivateList = ({ userName, privateList }, { socket }) => {
 	// only private rooms can have private lists
-	const user = UserModel.getUser(userName);
+	const user = UserController.getUser(userName);
 	const room_obj = RoomModel.addPrivateList(user, privateList);
 
 	if (room_obj.status === 0) {
@@ -213,7 +216,7 @@ const handleUserDisconnect = ({ userName }) => {
 
 const forwardMsg = ({ userName, content, toTeam }, { socket }) => {
 	try {
-		const { room_id, team_name } = UserModel.getUser(userName);
+		const { room_id, team_name } = UserController.getUser(userName);
 
 		// not in a room
 		if (!room_id || !content) return false;
@@ -230,7 +233,7 @@ const forwardMsg = ({ userName, content, toTeam }, { socket }) => {
 };
 
 const registerVotes = ({ userName, votes }, { socket }) => {
-	const { room_id, team_name } = UserModel.getUser(userName);
+	const { room_id, team_name } = UserController.getUser(userName);
 	const room_obj = RoomModel.registerVotes({
 		room_id,
 		userName,
@@ -280,7 +283,7 @@ const doVeto = async (quesIds, room_id, count, socket) => {
 };
 
 const startCompetition = async ({ userName }, { socket }) => {
-	const user = UserModel.getUser(userName);
+	const user = UserController.getUser(userName);
 	let state = 'start';
 	const room_check = RoomModel.startCompetitionRequirements(user);
 	if (room_check.status === 0) {
@@ -321,7 +324,7 @@ const atLeastPerTeam = (room_id, min_size = 1) => {
 
 const getRoomData = ({ userName, room_id }) => {
 	try {
-		const user = UserModel.getUser(userName);
+		const user = UserController.getUser(userName);
 		if (user.room_id !== room_id) throw new Error('User not in room');
 		return rooms[room_id];
 	} catch (err) {
@@ -342,7 +345,7 @@ const codeSubmission = async (
 	{ socket }
 ) => {
 	const quesId = problemCode;
-	const { room_id, team_name } = UserModel.getUser(userName);
+	const { room_id, team_name } = UserController.getUser(userName);
 	const testcase = await getTestcase(problemCode);
 	const room_check = RoomModel.codeSubmissionRequirements(
 		room_id,
@@ -367,7 +370,7 @@ const codeSubmission = async (
 			data: dataFromSubmitCode,
 			sucess: allPass,
 			problemCode,
-			team_name
+			team_name,
 		});
 
 		if (allPass) {
@@ -381,7 +384,9 @@ const codeSubmission = async (
 			);
 			console.log(room_obj);
 
-			socket.to(room_id).emit(SUCCESSFULLY_SUBMITTED, { problemCode, team_name });
+			socket
+				.to(room_id)
+				.emit(SUCCESSFULLY_SUBMITTED, { problemCode, team_name });
 
 			// if user's team solved all questions
 			// can also use Object.keys(rms.cpms.questions) and maybe <=

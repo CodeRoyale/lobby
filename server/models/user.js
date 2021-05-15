@@ -12,10 +12,12 @@ const addUser = ({
 		if (!userName || !socket_id || !profilePicture || !rank) {
 			throw new Error('Give all parameters');
 		}
-		if (userName) {
-			throw new Error('User already exists');
+		if (users[userName]) {
+			console.log(userName + ' reconnected');
+			users[userName].socket_id = socket_id;
+			return { status: 1, userObj: users[userName] };
 		}
-
+		console.log(userName + ' added');
 		const newUser = {
 			socket_id: socket_id,
 			room_id: room_id,
@@ -25,9 +27,10 @@ const addUser = ({
 			profilePicture: profilePicture,
 		};
 		users[userName] = newUser;
-		return newUser;
+
+		return { status: 2, userObj: users[userName] };
 	} catch (err) {
-		return err;
+		return { status: 0, error: err.message };
 	}
 };
 
@@ -54,23 +57,23 @@ const updateUser = ({
 	if (profilePicture || profilePicture === '') {
 		users[userName].profilePicture = profilePicture;
 	}
-	return users[userName];
+	return { status: 1, userObj: users[userName] };
 };
 
 const getUser = (userName) => {
 	try {
-		return users[userName];
+		return { status: 1, userObj: users[userName] };
 	} catch (err) {
-		return err.message || false;
+		return { status: 0, error: err.message || false };
 	}
 };
 
 const getUserData = () => {
 	// need proper authorizations
 	try {
-		return users;
+		return { status: 1, userObj: users };
 	} catch (err) {
-		return err.message || false;
+		return { status: 0, error: err.message || false };
 	}
 };
 
