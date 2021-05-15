@@ -1,15 +1,13 @@
-// this is my db for now
-
 const UserModel = require('../models/user');
 
 // all details related to a user connected to socket will be stored here
 
 const addUser = (userName, socket_id, profilePicture, rank = 10) => {
-	const returnObj = addUser({
+	const returnObj = UserModel.addUser({
 		userName,
 		socket_id,
-		room_id,
-		team_name,
+		// room_id,
+		// team_name,
 		rank,
 		profilePicture,
 	});
@@ -39,12 +37,12 @@ const addUser = (userName, socket_id, profilePicture, rank = 10) => {
 // this is just for extra checking
 // can change room_id and team_name
 const updateUser = ({
-	userName,
-	socket_id,
-	room_id,
-	team_name,
-	rank,
-	profilePicture,
+	userName='abc',
+	socket_id='abc',
+	room_id='abc',
+	team_name='abc',
+	rank='abc',
+	profilePicture='abc',
 }) => {
 	const returnObj = UserModel.updateUser({
 		userName,
@@ -78,6 +76,5 @@ module.exports = {
 	addUser,
 	getUserData,
 	getUser,
-	removeUser,
 	updateUser,
 };

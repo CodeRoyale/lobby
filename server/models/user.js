@@ -42,19 +42,19 @@ const updateUser = ({
 	rank,
 	profilePicture,
 }) => {
-	if (socket_id || socket_id === '') {
+	if ((socket_id || socket_id === '') && socket_id !=='dummy') {
 		users[userName].socket_id = socket_id;
 	}
-	if (room_id || room_id === '') {
+	if ((room_id || room_id === '') && room_id !=='dummy') {
 		users[userName].room_id = room_id;
 	}
-	if (team_name || team_name === '') {
+	if ((team_name || team_name === '' ) && team_name !=='dummy') {
 		users[userName].team_name = team_name;
 	}
-	if (rank) {
+	if (rank && rank !=='abc') {
 		users[userName].rank = rank;
 	}
-	if (profilePicture || profilePicture === '') {
+	if ((profilePicture || profilePicture === '' ) && profilePicture !=='dummy') {
 		users[userName].profilePicture = profilePicture;
 	}
 	return { status: 1, userObj: users[userName] };
