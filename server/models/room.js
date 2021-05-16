@@ -243,7 +243,7 @@ const joinTeam = (user, team_name) => {
 	//in new team
 	rooms[user.room_id].teams[team_name].push(userName);
 
-	return { status: 1, returnObj: rooms[user.room_id].teams[team_name] };
+	return { status: 1, returnObj: rooms[user.room_id].teams };
 };
 
 const closeRoom = (user, forceCloseRoom = false) => {
@@ -321,7 +321,7 @@ const leaveTeam = (user) => {
 	room.teams[team_name] = newTeam;
 	room.state.bench.push(userName);
 
-	return { status: 1, returnObj: newTeam };
+	return { status: 1, returnObj: room.teams };
 };
 
 const addPrivateList = (user, privateList) => {
