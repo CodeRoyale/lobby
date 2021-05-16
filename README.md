@@ -1,5 +1,5 @@
 <a href="https://dogehouse.tv"><p align="center">
-<img height=100 src="Coderoyale-logo.jpeg"/>
+<img height=100 src="Coderoyale-logo.jpg"/>
 
 </p></a>
 <p align="center">
