@@ -47,8 +47,8 @@ const authUser = (socket, next) => {
 		// token format "Bearer Token"
 		const token = socket.handshake.headers.authorization.split(' ')[1];
 		const payload = checkToken(token);
-
-		//if sucessfull
+    
+		//if successful
 		if (payload) {
 			// connection accepted
 			// now check if user is already connected or not
@@ -68,7 +68,7 @@ const authUser = (socket, next) => {
 	} catch (err) {
 		socket.emit();
 		next(err);
-	}
+  }
 };
 
 // we can move this inside handleuserevnets

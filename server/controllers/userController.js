@@ -1,6 +1,9 @@
 const UserModel = require('../models/user');
 
+// [userID] : {     }
+
 // all details related to a user connected to socket will be stored here
+
 
 const addUser = (userName, socket_id, profilePicture, rank = 10) => {
 	const returnObj = UserModel.addUser({

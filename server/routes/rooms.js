@@ -3,6 +3,7 @@ const router = express.Router();
 
 const { getRoomsData } = require('../controllers/roomController');
 
+
 router.get('/', (req, res) => {
 	const rooms = getRoomsData();
 	// making it string friendly
