@@ -1,10 +1,11 @@
-const express = require("express");
+const express = require('express');
+
 const router = express.Router();
 
-const { getUserData } = require("../controllers/userController");
+const { getUserData } = require('../controllers/userController');
 
-router.get("/", (req, res) => {
-  res.header("Content-Type", "application/json");
+router.get('/', (req, res) => {
+  res.header('Content-Type', 'application/json');
   res.send(
     `CodeRoyale Lobby Server is up and running. ${JSON.stringify(
       getUserData(),

@@ -1,6 +1,6 @@
-//- Please fill these
-const uuid = require("uuid");
-const jwt = require("jsonwebtoken");
+// - Please fill these
+const uuid = require('uuid');
+const jwt = require('jsonwebtoken');
 
 const encryptData = (data) => {
   // TODO : pls fix this
