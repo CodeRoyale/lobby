@@ -1,20 +1,23 @@
 // NEEDS REFACTOR
 
-const fetch = require('node-fetch');
-
 const postUrl = 'www.example.com';
 
 // testcases encoding to base64
 const testcasestobase64 = (test) => {
-  encoded_test = '';
   const testcases = [];
   try {
-    for (i of test) {
-      encoded_input = Buffer.from(i.input).toString('base64');
-      encoded_output = Buffer.from(i.output).toString('base64');
-      const data = { input: encoded_input, output: encoded_output };
+    for (let i = 0; i < test.length; i += 1) {
+      const encodedInput = Buffer.from(test[i].input).toString('base64');
+      const encodedOutput = Buffer.from(test[i].output).toString('base64');
+      const data = { input: encodedInput, output: encodedOutput };
       testcases.push(data);
     }
+    // for (const i of test) {
+    //   const encodedInput = Buffer.from(i.input).toString('base64');
+    //   const encodedOutput = Buffer.from(i.output).toString('base64');
+    //   const data = { input: encodedInput, output: encodedOutput };
+    //   testcases.push(data);
+    // }
   } catch (err) {
     console.log(err);
   }
@@ -23,29 +26,29 @@ const testcasestobase64 = (test) => {
 
 // source code encoding to base64
 const codetobase64 = (source) => {
-  let encoded_source = '';
+  let encodedSource = '';
   try {
-    encoded_source = Buffer.from(source).toString('base64');
+    encodedSource = Buffer.from(source).toString('base64');
   } catch (err) {
     console.log(err);
   }
-  return encoded_source;
+  return encodedSource;
 };
 
 // create required body data for create batch submission
 const createBody = (test, source, lang) => {
-  encoded_code = codetobase64(source);
-  encoded_test = testcasestobase64(test);
+  const encodedCode = codetobase64(source);
+  const encodedTest = testcasestobase64(test);
   const data = [];
-  for (i of encoded_test) {
-    const sub = {
-      language_id: lang,
-      source_code: encoded_code,
-      stdin: i.input,
-      expected_output: i.output,
-    };
-    data.push(sub);
-  }
+  // for (const i of encodedTest) {
+  //   const sub = {
+  //     language_id: lang,
+  //     source_code: encodedCode,
+  //     stdin: i.input,
+  //     expected_output: i.output,
+  //   };
+  //   data.push(sub);
+  // }
   const body = {
     submissions: data,
   };
@@ -57,27 +60,28 @@ const createUrl = (responseTokens) => {
   switch (responseTokens.submissions[0].source_code) {
     case 'am9lbA==':
       return 'joel';
-      break;
     case 'bWFjaGk=':
       return 'machi';
-      break;
     case 'anVzdGlu':
       return 'justin';
+    default:
       break;
   }
+  return 'error in codeExecution';
 };
 
 // function for creating a post submissionn
-async function postData(url = '', data = {}) {
+async function postData(data = {}) {
   return data;
 }
 
 // function for getting a get submissionn
-async function getData(url = '', callback) {
+async function getData(url = '') {
   // providing certain dictionary values for certain source_codes
+  let tempData;
   switch (url) {
     case 'joel':
-      var temp_data = {
+      tempData = {
         submissions: [
           {
             language_id: 71,
@@ -115,7 +119,7 @@ async function getData(url = '', callback) {
       };
       break;
     case 'justin':
-      var temp_data = {
+      tempData = {
         submissions: [
           {
             language_id: 71,
@@ -153,7 +157,7 @@ async function getData(url = '', callback) {
       };
       break;
     case 'machi':
-      var temp_data = {
+      tempData = {
         submissions: [
           {
             language_id: 71,
@@ -189,8 +193,11 @@ async function getData(url = '', callback) {
           },
         ],
       };
+      break;
+    default:
+      break;
   }
-  return temp_data;
+  return tempData;
 }
 
 // send test cases in array and source code in string all should be base64 encoded and language ID
@@ -207,8 +214,8 @@ const submitCode = (testCase, code, langId, callback) => {
       // time out is set to give time for server to load the answer properly to send response
       setTimeout(() => {
         // getData called to get submission results
-        getData(getUrl).then((data) => {
-          callback(data);
+        getData(getUrl).then((results) => {
+          callback(results);
         });
       }, 1000);
     });

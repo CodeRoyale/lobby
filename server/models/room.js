@@ -158,7 +158,6 @@ const joinRoom = (user, roomId, teamName) => {
     rooms[roomId].teams[teamName].push(userName);
   } else {
     // else bench the user
-    teamName = '';
     rooms[roomId].state.bench.push(userName);
   }
 
@@ -384,15 +383,19 @@ const registerVotes = ({ roomId, userName, teamName, votes }) => {
     return { status: 0, error: "Room doesn't meet the requirements." };
   }
 
+  // for no-param-reassign linting
+  let questionVotes = votes;
+
   // valid votes only
-  votes = votes.filter((id) => allQuestions.includes(id));
-  // votes should be unique
-  votes = [...new Set(votes)];
-  // should not excede maxVotes allowed
-  // we will only take Min(votes.length, maxVote) votes
-  if (votes.length > maxVote) votes = votes.slice(0, maxVote);
-  // note votes
-  votes.forEach((id) => {
+  questionVotes = questionVotes.filter((id) => allQuestions.includes(id));
+  // questionVotes should be unique
+  questionVotes = [...new Set(questionVotes)];
+  // should not excede maxquestionVotes allowed
+  // we will only take Min(questionVotes.length, maxVote) questionVotes
+  if (questionVotes.length > maxVote)
+    questionVotes = questionVotes.slice(0, maxVote);
+  // note questionVotes
+  questionVotes.forEach((id) => {
     rooms[roomId].competition.veto.votes[id] += 1;
   });
   rooms[roomId].competition.veto.voted.push(userName);
@@ -453,19 +456,22 @@ const startCompetition = (user, state) => {
 };
 
 const atLeastPerTeam = (roomId, minSize = 1) => {
-  // changed after linting
+  // ! changed after linting
   try {
     Object.values(rooms[roomId].teams).forEach(function (memList) {
       if (memList.length < minSize) return false;
       return true;
     });
-    // before linting:
+
+    // ! before linting:
     // for (const [, memList] of Object.entries(rooms[roomId].teams)) {
     //   if (memList.length < minSize) return false;
     // }
   } catch (err) {
     return { error: err.message };
   }
+  // ! after linting
+  return roomId;
 };
 
 const startCompetitionRequirements = (user) => {

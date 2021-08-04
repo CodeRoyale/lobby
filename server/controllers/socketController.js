@@ -78,8 +78,7 @@ const genericActionCreater =
     actionResponder,
     dataFromServer,
     asynFunc = false,
-    failReply = 'Some error occured !',
-    ACTION = ''
+    failReply = 'Some error occured !'
   ) =>
   (dataFromClient, cb) => {
     // if user didnt pass anything

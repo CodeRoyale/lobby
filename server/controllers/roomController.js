@@ -90,7 +90,7 @@ const removeUserFromRoom = ({ userName }, { socket }) => {
   // user removed from the room
   console.log(userName, ' removed from ', roomId);
   setRoom(userName, '');
-  console.log("checking the setRoom the function");
+  console.log('checking the setRoom the function');
   socket.to(roomId).emit(ROOM_UPDATED, {
     type: LEFT_ROOM,
     data: { userName },
