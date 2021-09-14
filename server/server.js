@@ -1,25 +1,24 @@
 // basic setting up
 if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 
+// importing packages
+import express, { json } from 'express';
+import { hostname } from 'os';
+import cors from 'cors';
+import { createServer } from 'http';
+import socketio from 'socket.io';
+
 const PORT = process.env.PORT || 2500;
 
-// importing packages
-const express = require('express');
-const os = require('os');
-const cors = require('cors');
-const http = require('http');
-const socketio = require('socket.io');
+
 
 // importing controllers
-const {
-  authUser,
-  handleUserEvents,
-} = require('./controllers/socketController');
+import { authUser, handleUserEvents } from './controllers/socketController';
 
 // crearte server using http
 // we need to use http here for socket.io
 const app = express();
-const server = http.createServer(app);
+const server = createServer(app);
 
 // HACKER BOII
 const whitelist = ['http://localhost:3000', 'https://coderoyale.netlify.app'];
@@ -40,7 +39,7 @@ const corsOptions = {
 
 // middlewares
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(json());
 
 // Routes
 app.use('/', require('./routes/main'));
@@ -74,10 +73,10 @@ try {
 
 // start listening
 server.listen(PORT, () => {
-  console.log(`Loby Server running at - ${os.hostname()} on PORT : ${PORT}`);
+  console.log(`Loby Server running at - ${hostname()} on PORT : ${PORT}`);
 });
 
-module.exports = {
+export default {
   server,
   io,
 };

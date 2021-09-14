@@ -1,12 +1,11 @@
 // - Please fill these
-const uuid = require('uuid');
+// const uuid = require('uuid');
 const jwt = require('jsonwebtoken');
 
-const encryptData = (data) => {
-  // TODO : pls fix this
+// const encryptData = (data) => {
+//  TODO : pls fix this
 
-  return uuid.v4();
-};
+//    return uuid.v4(); };
 
 const checkToken = (token) => {
   try {
@@ -16,12 +15,12 @@ const checkToken = (token) => {
       process.env.ACCESS_SECRECT_KEY + decodedToken.userName
     );
     return payload;
-  } catch {
+  } catch (err) {
     return false;
   }
 };
 
 module.exports = {
-  encryptData,
+  // encryptData,
   checkToken,
 };

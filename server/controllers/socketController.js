@@ -55,6 +55,7 @@ const authUser = (socket, next) => {
       const userState = addUser(payload.userName, socket.id, payload.picture);
       if (userState) {
         socket.emit(CONNECTION_ACK, userState);
+        // eslint-disable-next-line no-param-reassign
         socket.userDetails = payload;
         next();
       } else {
@@ -82,7 +83,9 @@ const genericActionCreater =
   ) =>
   (dataFromClient, cb) => {
     // if user didnt pass anything
+    // eslint-disable-next-line no-param-reassign
     if (!dataFromClient) dataFromClient = {};
+    // eslint-disable-next-line no-param-reassign
     dataFromClient.userName = dataFromServer.socket.userDetails.userName;
     let data;
     if (!asynFunc) {
@@ -91,9 +94,9 @@ const genericActionCreater =
       if (cb) cb(data);
     } else {
       actionResponder(dataFromClient, dataFromServer)
-        .then((data) => {
-          console.log(data);
-          if (cb) cb(data);
+        .then((tempData) => {
+          console.log(tempData);
+          if (cb) cb(tempData);
         })
         .catch((err) => {
           console.log(err);

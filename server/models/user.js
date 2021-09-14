@@ -1,27 +1,28 @@
-users = {};
+//! prefer-const prettier
+const users = {};
 
 const addUser = ({
   userName,
-  socket_id,
-  room_id,
-  team_name,
+  socketId,
+  roomId,
+  teamName,
   rank,
   profilePicture,
 }) => {
   try {
-    if (!userName || !socket_id || !profilePicture || !rank) {
+    if (!userName || !socketId || !profilePicture || !rank) {
       throw new Error('Give all parameters');
     }
     if (users[userName]) {
       console.log(`${userName} reconnected`);
-      users[userName].socket_id = socket_id;
+      users[userName].socketId = socketId;
       return { status: 1, userObj: users[userName] };
     }
     console.log(`${userName} added`);
     const newUser = {
-      socket_id: socket_id,
-      room_id: room_id,
-      team_name: team_name,
+      socketId: socketId,
+      roomId: roomId,
+      teamName: teamName,
       rank: rank,
       userName: userName,
       profilePicture: profilePicture,
@@ -36,8 +37,11 @@ const addUser = ({
 
 const updateUser = (updatedUser) => {
   users[updatedUser.userName] = {
+    //! needs to be checked later
+    /* eslint-disable */
     ...users[updatedUser.userName],
     ...updatedUser,
+    /* eslint-enable */
   };
   return { status: 1, userObj: users[updatedUser.userName] };
 };

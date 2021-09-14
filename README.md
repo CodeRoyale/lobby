@@ -23,15 +23,12 @@
 
 ## Structure
 
-| Module           | Description |
-| :--------------- | :---------: |
-| [frontend](https://github.com/CodeRoyale/frontend) |    React frontend     |
-| [lobby](https://github.com/CodeRoyale/lobby)    |    WebSocket server for managing competitions    |
-| [userAPI](https://github.com/CodeRoyale/userAPI)    |     JWT authentication server     |
-| [questionAPI](https://github.com/CodeRoyale/questionAPI)    |    REST API serving questions and test cases     |
-
-
-
+| Module                                                   |                Description                 |
+| :------------------------------------------------------- | :----------------------------------------: |
+| [frontend](https://github.com/CodeRoyale/frontend)       |               React frontend               |
+| [lobby](https://github.com/CodeRoyale/lobby)             | WebSocket server for managing competitions |
+| [userAPI](https://github.com/CodeRoyale/userAPI)         |         JWT authentication server          |
+| [questionAPI](https://github.com/CodeRoyale/questionAPI) | REST API serving questions and test cases  |
 
 ## Branches
 
@@ -53,10 +50,9 @@ Please read [CONTRIBUTING.md](https://github.com/CodeRoyale/lobby/blob/develop/C
 - [@Rec0iL99](https://github.com/Rec0iL99)
 
 ## How to run locally
-Check out [SETUP.md](https://github.com/CodeRoyale/lobby/blob/develop/SETUP.md)
 
+Check out [SETUP.md](https://github.com/CodeRoyale/lobby/blob/develop/SETUP.md)
 
 ## Why did we make this?
 
 The goal of CodeRoyale is to create a Competitive Programming platform, where users can have coding battle with friends, random users and team battles to show case your programming skills.
-

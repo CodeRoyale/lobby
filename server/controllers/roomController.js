@@ -1,4 +1,4 @@
-// const { setRoom, getUser, setTeam, mapNameToId } = require('./userController');
+const { setRoom } = require('./userController');
 const { getQuestions, getTestcase } = require('../utils/qapiConn');
 const { ROOM_DEFAULTS, ROOM_LIMITS } = require('./config');
 const { submitCode } = require('../utils/codeExecution');
@@ -249,7 +249,7 @@ const registerVotes = ({ userName, votes }, { socket }) => {
 };
 
 const doVeto = async (quesIds, roomId, count, socket) => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let state = 'start';
     const roomCheck = RoomModel.doVetoRequirements({ roomId });
     const room = roomCheck.returnObj;
@@ -352,6 +352,7 @@ const codeSubmission = async (
         allPass = false;
         return false;
       }
+      return true;
     });
     // code submitted
     socket.emit(CODE_SUBMITTED, {
@@ -384,6 +385,8 @@ const codeSubmission = async (
       }
     }
   });
+  // returned this after it caused linting error to return something for the function
+  return 'all-pass';
 };
 
 module.exports = {

@@ -40,6 +40,16 @@ const createBody = (test, source, lang) => {
   const encodedCode = codetobase64(source);
   const encodedTest = testcasestobase64(test);
   const data = [];
+
+  for (let i = 0; i < encodedTest.length; i += 1) {
+    const sub = {
+      language_id: lang,
+      source_code: encodedCode,
+      stdin: encodedTest[i].input,
+      expected_output: encodedCode[i].output,
+    };
+    data.push(sub);
+  }
   // for (const i of encodedTest) {
   //   const sub = {
   //     language_id: lang,
