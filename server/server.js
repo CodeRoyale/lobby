@@ -1,19 +1,19 @@
 // basic setting up
-if (process.env.NODE_ENV !== 'production') require('dotenv').config();
-
 // importing packages
-import express, { json } from 'express';
-import { hostname } from 'os';
-import cors from 'cors';
-import { createServer } from 'http';
-import socketio from 'socket.io';
-
-const PORT = process.env.PORT || 2500;
+const express = require('express');
+const hostname = require('os');
+const os = require('os');
+const createServer = require('http')
+const socketio = require('socket.io');
 
 
 
 // importing controllers
-import { authUser, handleUserEvents } from './controllers/socketController';
+const { authUser, handleUserEvents } = require('./controllers/socketController');
+
+if (process.env.NODE_ENV !== 'production') require('dotenv').config();
+
+const PORT = process.env.PORT || 2500;
 
 // crearte server using http
 // we need to use http here for socket.io
@@ -76,7 +76,7 @@ server.listen(PORT, () => {
   console.log(`Loby Server running at - ${hostname()} on PORT : ${PORT}`);
 });
 
-export default {
+module.exports = {
   server,
   io,
 };
