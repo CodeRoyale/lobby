@@ -1,11 +1,11 @@
 // - Please fill these
-// const uuid = require('uuid');
+const uuid = require('uuid');
 const jwt = require('jsonwebtoken');
 
-// const encryptData = (data) => {
-//  TODO : pls fix this
-
-//    return uuid.v4(); };
+const encryptData = () => {
+  //  TODO : pls fix this
+  return uuid.v4();
+};
 
 const checkToken = (token) => {
   try {
@@ -21,6 +21,6 @@ const checkToken = (token) => {
 };
 
 module.exports = {
-  // encryptData,
+  encryptData,
   checkToken,
 };

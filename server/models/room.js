@@ -72,7 +72,7 @@ const createRoom = (roomConfig, user) => {
   // we nee a *unique* roomId
 
   // ! change this fn
-  const roomId = auth.encryptData(roomConfig.userName);
+  const roomId = auth.encryptData();
 
   if (rooms[roomId]) {
     return {
@@ -131,6 +131,7 @@ const createRoom = (roomConfig, user) => {
 
 const joinRoom = (user, roomId, teamName) => {
   const { userName, profilePicture } = user;
+  // TODO remove the console logs
   if (
     !rooms[roomId] &&
     (!rooms[roomId].config.privateRoom ||
