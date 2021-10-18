@@ -131,7 +131,6 @@ const createRoom = (roomConfig, user) => {
 
 const joinRoom = (user, roomId, teamName) => {
   const { userName, profilePicture } = user;
-  // TODO remove the console logs
   if (
     !rooms[roomId] &&
     (!rooms[roomId].config.privateRoom ||

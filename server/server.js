@@ -1,8 +1,10 @@
+/* eslint-disable node/no-unsupported-features/es-syntax */
 // basic setting up
 // importing packages
+
 const express = require('express');
-const os = require('os');
 const cors = require('cors');
+const os = require('os');
 const http = require('http');
 const socketio = require('socket.io');
 
@@ -12,6 +14,7 @@ const {
   handleUserEvents,
 } = require('./controllers/socketController');
 
+// eslint-disable-next-line global-require
 if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 
 const PORT = process.env.PORT || 2500;
