@@ -43,7 +43,7 @@ const updateUser = (updatedUser) => {
     ...updatedUser,
     /* eslint-enable */
   };
-  return { status: 1, userObj: users[updatedUser.userName] };
+  // not returning anything compared to develop branch
 };
 
 const getUser = (userName) => {

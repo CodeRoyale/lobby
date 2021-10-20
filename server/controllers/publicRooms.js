@@ -21,14 +21,14 @@ const matchUp = (userA, userB, { socket, io }) => {
   // create team1 and team2
   const team1 = 'Team 1';
   const team2 = 'Team 2';
-  createTeam({ userName: userA.userName, team_name: team1 }, { socket });
-  createTeam({ userName: userA.userName, team_name: team2 }, { socket });
+  createTeam({ userName: userA.userName, teamName: team1 }, { socket });
+  createTeam({ userName: userA.userName, teamName: team2 }, { socket });
 
   // join team for userA
-  joinTeam({ userName: userA.userName, team_name: team1 }, { socket });
+  joinTeam({ userName: userA.userName, teamName: team1 }, { socket });
 
   // join room and team for userB
-  joinRoom({ userName: userB.userName, roomId, team_name: team2 }, { socket });
+  joinRoom({ userName: userB.userName, roomId, teamName: team2 }, { socket });
 
   // send user A and B FOUND_MATCH
   io.to(userA.socket_id).emit(MATCH_FOUND, room);

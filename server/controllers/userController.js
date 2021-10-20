@@ -57,8 +57,7 @@ const updateUser = (updatedUser) => {
   // 	check.includes(ele)
   // );
   console.log(newUpdated);
-  const returnObj = UserModel.updateUser(newUpdated);
-  return returnObj.userObj;
+  UserModel.updateUser(newUpdated);
 };
 
 const getUser = (userName) => {

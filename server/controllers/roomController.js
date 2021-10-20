@@ -49,6 +49,12 @@ const createRoom = (config, { socket }) => {
     return { err: roomObj.error };
   }
   const roomId = roomObj.returnObj.config.id;
+  // TODO remove the below console.log
+  console.log('roomId from roomController createRoom()', roomId);
+  UserController.updateUser({
+    userName: config.userName,
+    roomId,
+  });
   socket.join(roomId);
   // created room
   // user already has an active room

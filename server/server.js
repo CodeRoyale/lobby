@@ -19,7 +19,7 @@ if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 
 const PORT = process.env.PORT || 2500;
 
-// crearte server using http
+// create server using http
 // we need to use http here for socket.io
 const app = express();
 const server = http.createServer(app);
