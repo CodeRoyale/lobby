@@ -62,7 +62,7 @@ const authUser = (socket, next) => {
         throw new Error('Already Conected');
       }
     } else {
-      console.log('Invalid token');
+      // console.log('Invalid token');
       socket.emit(CONNECTION_DENY);
       throw new Error('Auth failed');
     }
@@ -90,7 +90,7 @@ const genericActionCreater =
     let data;
     if (!asynFunc) {
       data = actionResponder(dataFromClient, dataFromServer) || failReply;
-      console.log(data);
+      // console.log(data);
       if (cb) cb(data);
     } else {
       actionResponder(dataFromClient, dataFromServer)

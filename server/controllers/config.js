@@ -1,13 +1,13 @@
 const ROOM_DEFAULTS = {
-  max_teams: 5,
-  max_perTeam: 5,
-  max_perRoom: 25,
+  maxTeams: 5,
+  maxPerTeam: 5,
+  maxPerRoom: 25,
 };
 
 const ROOM_LIMITS = {
-  max_teams: 25,
-  max_perTeam: 10,
-  max_perRoom: 250,
+  maxTeams: 25,
+  maxPerTeam: 10,
+  maxPerRoom: 250,
 };
 // SOCH SAMJH KE
 

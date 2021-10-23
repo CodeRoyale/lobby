@@ -3,7 +3,7 @@ const { getQuestions, getTestcase } = require('../utils/qapiConn');
 const { ROOM_DEFAULTS, ROOM_LIMITS } = require('./config');
 const { submitCode } = require('../utils/codeExecution');
 
-console.log(ROOM_DEFAULTS, ROOM_LIMITS);
+// console.log(ROOM_DEFAULTS, ROOM_LIMITS);
 const {
   ROOM_UPDATED,
   RCV_MSG,
@@ -49,8 +49,7 @@ const createRoom = (config, { socket }) => {
     return { err: roomObj.error };
   }
   const roomId = roomObj.returnObj.config.id;
-  // TODO remove the below console.log
-  console.log('roomId from roomController createRoom()', roomId);
+  // console.log('roomId from roomController createRoom()', roomId);
   UserController.updateUser({
     userName: config.userName,
     roomId,
@@ -58,6 +57,7 @@ const createRoom = (config, { socket }) => {
   socket.join(roomId);
   // created room
   // user already has an active room
+  console.log(rooms);
   return roomObj.returnObj;
 };
 
@@ -74,7 +74,7 @@ const joinRoom = ({ userName, roomId, teamName }, { socket }) => {
     type: JOINED_ROOM,
     data: { userName, profilePicture: user.profilePicture },
   });
-  console.log(userName, ' joined from ', roomId);
+  // console.log(userName, ' joined from ', roomId);
   return roomObj.returnObj;
 };
 
@@ -94,9 +94,9 @@ const removeUserFromRoom = ({ userName }, { socket }) => {
     });
   }
   // user removed from the room
-  console.log(userName, ' removed from ', roomId);
+  // console.log(userName, ' removed from ', roomId);
   setRoom(userName, '');
-  console.log('checking the setRoom the function');
+  // console.log('checking the setRoom the function');
   socket.to(roomId).emit(ROOM_UPDATED, {
     type: LEFT_ROOM,
     data: { userName },
@@ -108,7 +108,6 @@ const removeUserFromRoom = ({ userName }, { socket }) => {
 const createTeam = ({ userName, teamName }, { socket }) => {
   const user = UserController.getUser(userName);
   const { roomId } = user;
-  console.log(user);
   const roomObj = RoomModel.createTeam(user, teamName);
   if (roomObj.status === 0) {
     return { err: roomObj.error };
@@ -117,6 +116,7 @@ const createTeam = ({ userName, teamName }, { socket }) => {
     type: TEAM_CREATED,
     data: { teamName },
   });
+  console.log(roomObj.returnObj);
   return roomObj.returnObj;
 };
 
@@ -159,7 +159,7 @@ const closeRoom = ({ userName, forceCloseRoom }, { socket }) => {
   }
 
   const allMembers = roomObj.returnObj;
-  console.log(allMembers);
+  // console.log(allMembers);
   // not need to chage room data since we are going to delete it
   allMembers.forEach((users) => {
     // this is a server action notify all
@@ -372,14 +372,14 @@ const codeSubmission = async (
       // tell everyone except user
       let state = 'one-pass';
       const roomObj = RoomModel.codeSubmission(roomId, state, teamName, quesId);
-      console.log(roomObj);
+      // console.log(roomObj);
 
       socket.to(roomId).emit(SUCCESSFULLY_SUBMITTED, { problemCode, teamName });
 
       // if user's team solved all questions
       // can also use Object.keys(rms.cpms.questions) and maybe <=
       if (
-        room.competition.max_questions ===
+        room.competition.maxQuestions ===
         room.competition.scoreboard[teamName].length
       ) {
         if (stopTimers[roomId].competitionTimer)

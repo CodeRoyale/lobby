@@ -24,9 +24,9 @@ const rooms = {};
 // getRoomData
 
 const ROOM_DEFAULTS = {
-  max_teams: 5,
-  max_perTeam: 5,
-  max_perRoom: 25,
+  maxTeams: 5,
+  maxPerTeam: 5,
+  maxPerRoom: 25,
   competitionTimelimit: 2700000,
   competitionMaxQues: 3,
   // should be less than number of questions , but fuck it
@@ -37,9 +37,9 @@ const ROOM_DEFAULTS = {
 
 // TODO : reconsider the limits
 const ROOM_LIMITS = {
-  max_teams: 25,
-  max_perTeam: 10,
-  max_perRoom: 250,
+  maxTeams: 25,
+  maxPerTeam: 10,
+  maxPerRoom: 250,
   competitionTimelimit: 172800001,
   competitionMaxQues: 20,
   vetoMaxVote: 1,
@@ -84,24 +84,24 @@ const createRoom = (roomConfig, user) => {
     config: {
       id: roomId,
       admin: roomConfig.userName,
-      max_teams: getProperValue('max_teams', roomConfig.max_teams),
-      max_perTeam: getProperValue('max_perTeam', roomConfig.max_perTeam),
+      maxTeams: getProperValue('maxTeams', roomConfig.maxTeams),
+      maxPerTeam: getProperValue('maxPerTeam', roomConfig.maxPerTeam),
       privateRoom: roomConfig.privateRoom === false,
-      max_perRoom: getProperValue('max_perRoom', roomConfig.max_perRoom),
+      maxPerRoom: getProperValue('maxPerRoom', roomConfig.maxPerRoom),
       createdAt: Date.now(),
     },
     state: {
       privateList: [],
-      cur_memCount: 1,
+      curMemCount: 1,
       banList: [],
       bench: [roomConfig.userName],
       profilePictures: { [roomConfig.userName]: user.profilePicture },
     },
     competition: {
       questions: {},
-      max_questions: getProperValue(
+      maxQuestions: getProperValue(
         'competitionMaxQues',
-        roomConfig.max_questions
+        roomConfig.maxQuestions
       ),
       contestStartedAt: null,
       contnetEndedAt: null,
@@ -116,7 +116,7 @@ const createRoom = (roomConfig, user) => {
         timeLimit: getProperValue('vetoTimeLimit', roomConfig.vetoTimeLimit),
         quesCount: getProperValue(
           'vetoQuestionCount',
-          roomConfig.veto_quesCount
+          roomConfig.vetoQuesCount
         ),
       },
       scoreboard: {},
@@ -135,7 +135,7 @@ const joinRoom = (user, roomId, teamName) => {
     !rooms[roomId] &&
     (!rooms[roomId].config.privateRoom ||
       !rooms[roomId].state.privateList.includes(userName)) &&
-    rooms[roomId].state.cur_memCount > rooms[roomId].config.max_perRoom
+    rooms[roomId].state.curMemCount > rooms[roomId].config.maxPerRoom
   ) {
     return { status: 0, error: "The User doesn't meet the specifications" };
   }
@@ -152,7 +152,7 @@ const joinRoom = (user, roomId, teamName) => {
   if (
     teamName &&
     rooms[roomId].team[teamName] &&
-    rooms[roomId].teams[teamName].length < rooms[roomId].config.max_perTeam
+    rooms[roomId].teams[teamName].length < rooms[roomId].config.maxPerTeam
   ) {
     // if user passes a team and that team exist and there is space in that team
     rooms[roomId].teams[teamName].push(userName);
@@ -162,7 +162,7 @@ const joinRoom = (user, roomId, teamName) => {
   }
 
   // user has been added to bench or a Team
-  rooms[roomId].state.cur_memCount += 1;
+  rooms[roomId].state.curMemCount += 1;
   rooms[roomId].state.profilePictures[userName] = profilePicture;
   return { status: 2, returnObj: rooms[roomId] };
 };
@@ -207,7 +207,7 @@ const removeUserFromRoom = (user) => {
   }
 
   // removed
-  rooms[roomId].state.cur_memCount -= 1;
+  rooms[roomId].state.curMemCount -= 1;
 
   return { status, returnObj: rooms[roomId] };
 };
@@ -220,7 +220,7 @@ const joinTeam = (user, teamName) => {
   if (
     !room &&
     !room.teams[teamName] &&
-    room.teams[teamName].length > room.config.max_perTeam
+    room.teams[teamName].length > room.config.maxPerTeam
   ) {
     return {
       status: 0,
@@ -291,7 +291,7 @@ const createTeam = (user, teamName) => {
     return { status: 0, error: 'Only admin can do this' };
   }
   if (
-    Object.keys(room.teams).length > room.config.max_teams &&
+    Object.keys(room.teams).length > room.config.maxTeams &&
     room.teams[teamName]
   ) {
     return {
@@ -339,8 +339,8 @@ const addPrivateList = (user, privateList) => {
 
 const getRoomData = (user, roomsId) => {
   const { roomId } = user;
-
-  if (roomId !== roomsId) return { status: 0, error: 'User not in room' };
+  if (roomId !== roomsId)
+    return { status: 0, error: 'User not in room from room.js' };
   return { status: 1, returnObj: rooms[roomId] };
 };
 
@@ -415,7 +415,7 @@ const registerVotes = ({ roomId, userName, teamName, votes }) => {
     let results = Object.entries(rooms[roomId].competition.veto.votes);
     results = results
       .sort((a, b) => b[1] - a[1])
-      .slice(0, rooms[roomId].competition.max_questions);
+      .slice(0, rooms[roomId].competition.maxQuestions);
     // take only qids
     results = results.map((ele) => ele[0]);
     rooms[roomId].competition.questions = results;
@@ -487,7 +487,7 @@ const startCompetitionRequirements = (user) => {
   if (
     !room ||
     room.config.admin !== userName ||
-    room.state.cur_memCount < 2 ||
+    room.state.curMemCount < 2 ||
     Object.keys(room.teams).length < 2 ||
     !atLeastPerTeam(roomId) ||
     room.competition.contestOn ||

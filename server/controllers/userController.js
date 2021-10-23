@@ -8,8 +8,8 @@ const addUser = (userName, socketId, profilePicture, rank = 10) => {
   const returnObj = UserModel.addUser({
     userName,
     socketId,
-    // room_id,
-    // team_name,
+    // roomId,
+    // teamName,
     rank,
     profilePicture,
   });
@@ -37,14 +37,14 @@ const addUser = (userName, socketId, profilePicture, rank = 10) => {
 // };
 
 // this is just for extra checking
-// can change room_id and team_name
+// can change roomId and teamName
 
 const updateUser = (updatedUser) => {
   const check = [
     'userName',
     'socketId',
-    'room_id',
-    'team_name',
+    'roomId',
+    'teamName',
     'rank',
     'profilePicture',
   ];
@@ -56,8 +56,9 @@ const updateUser = (updatedUser) => {
   // let newUpdatedUser = Object.keys(updatedUser).filter((ele) =>
   // 	check.includes(ele)
   // );
-  console.log(newUpdated);
-  UserModel.updateUser(newUpdated);
+  // console.log(newUpdated);
+  const returnObj = UserModel.updateUser(newUpdated);
+  return returnObj.userObj;
 };
 
 const getUser = (userName) => {
