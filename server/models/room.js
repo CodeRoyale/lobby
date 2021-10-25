@@ -344,6 +344,15 @@ const getRoomData = (user, roomsId) => {
   return { status: 1, returnObj: rooms[roomId] };
 };
 
+const getRoomsData = () => {
+  // need proper authorizations
+  try {
+    return { status: 1, roomObj: rooms };
+  } catch (err) {
+    return { status: 0, error: err.message || false };
+  }
+};
+
 /**
  *
  * @param {sting} userName -  user's userName
@@ -573,6 +582,7 @@ module.exports = {
   addPrivateList,
   leaveTeam,
   getRoomData,
+  getRoomsData,
   registerVotes,
   startCompetitionRequirements,
   startCompetition,

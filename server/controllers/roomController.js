@@ -327,11 +327,11 @@ const getRoomData = ({ userName, roomId }) => {
 };
 
 const getRoomsData = () => {
-  try {
-    return rooms;
-  } catch (err) {
-    return { error: err.message };
+  const returnObj = RoomModel.getRoomsData();
+  if (returnObj.status === 0) {
+    return returnObj.error;
   }
+  return returnObj.roomObj;
 };
 
 const codeSubmission = async (
