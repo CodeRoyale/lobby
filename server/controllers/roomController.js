@@ -25,9 +25,6 @@ const {
 const RoomModel = require('../models/room');
 const UserController = require('./userController');
 
-// this is my db for now
-const rooms = {};
-
 // cant store them in roomObj cause it causes lot of problems
 // to stop comepetition
 const stopTimers = {};
@@ -57,7 +54,6 @@ const createRoom = (config, { socket }) => {
   socket.join(roomId);
   // created room
   // user already has an active room
-  console.log(rooms);
   return roomObj.returnObj;
 };
 
@@ -69,6 +65,7 @@ const joinRoom = ({ userName, roomId, teamName }, { socket }) => {
   if (roomObj.status === 0) {
     return { err: roomObj.error };
   }
+  UserController.updateUser({ userName, roomId, teamName });
   socket.join(roomId);
   socket.to(roomId).emit(ROOM_UPDATED, {
     type: JOINED_ROOM,
@@ -317,13 +314,18 @@ const startCompetition = async ({ userName }, { socket }) => {
 // };
 
 const getRoomData = ({ userName, roomId }) => {
-  try {
-    const user = UserController.getUser(userName);
-    if (user.roomId !== roomId) throw new Error('User not in room');
-    return rooms[roomId];
-  } catch (err) {
-    return { error: err.message };
+  const returnObj = RoomModel.getRoomData(userName, roomId);
+  if (returnObj.status === 0) {
+    return returnObj.error;
   }
+  return returnObj.roomObj;
+  // try {
+  //   const user = UserController.getUser(userName);
+  //   if (user.roomId !== roomId) throw new Error('User not in room');
+  //   return rooms[roomId];
+  // } catch (err) {
+  //   return { error: err.message };
+  // }
 };
 
 const getRoomsData = () => {

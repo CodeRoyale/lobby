@@ -158,6 +158,7 @@ const joinRoom = (user, roomId, teamName) => {
     rooms[roomId].teams[teamName].push(userName);
   } else {
     // else bench the user
+    teamName = '';
     rooms[roomId].state.bench.push(userName);
   }
 
@@ -338,10 +339,12 @@ const addPrivateList = (user, privateList) => {
 };
 
 const getRoomData = (user, roomsId) => {
+  console.log(user,'yaha dekh user ko');
   const { roomId } = user;
+  console.log(roomId,'yaha dekho',roomsId);
   if (roomId !== roomsId)
     return { status: 0, error: 'User not in room from room.js' };
-  return { status: 1, returnObj: rooms[roomId] };
+  return { status: 1, roomObj: rooms[roomId] };
 };
 
 const getRoomsData = () => {
