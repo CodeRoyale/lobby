@@ -123,6 +123,7 @@ const joinTeam = ({ userName, teamName }, { socket }) => {
   if (roomObj.status === 0) {
     return { err: roomObj.error };
   }
+  UserController.updateUser({ userName, teamName });
   socket.join(`${user.roomId}/${teamName}`);
   socket.to(user.roomId).emit(ROOM_UPDATED, {
     type: JOINED_TEAM,
@@ -139,6 +140,7 @@ const leaveTeam = ({ userName }, { socket }) => {
   if (roomObj.status === 0) {
     return { err: roomObj.error };
   }
+  UserController.updateUser({ userName, teamName: '' });
   socket.leave(`${user.roomId}/${user.teamName}`);
   socket.to(roomId).emit(ROOM_UPDATED, {
     type: LEFT_TEAM,
@@ -263,8 +265,8 @@ const doVeto = async (quesIds, roomId, count, socket) => {
     resolvers[roomId] = resolve;
     state = 'stop';
     stopTimers[roomId].vetoTimer = setTimeout(() => {
-      RoomModel.doVeto(quesIds, roomId, count, state);
-      const results = roomObj.returnObj;
+      const roomObj2 = RoomModel.doVeto(quesIds, roomId, count, state);
+      const results = roomObj2.returnObj;
       socket.to(roomId).emit(VETO_STOP, results);
       socket.emit(VETO_STOP, results);
 
@@ -285,8 +287,8 @@ const startCompetition = async ({ userName }, { socket }) => {
   console.log('Starting competition', userName);
   stopTimers[roomId] = {};
   const allQuestions = await getQuestions(room.competition.veto.quesCount);
-
-  await doVeto(allQuestions, roomId, room.competition.max_questions, socket);
+  
+  await doVeto(allQuestions, roomId, room.competition.maxQuestions, socket);
   let roomObj = RoomModel.startCompetition(user, state);
 
   socket.to(roomId).emit(COMPETITION_STARTED, roomObj);

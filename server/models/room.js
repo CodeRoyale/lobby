@@ -372,6 +372,7 @@ const getRoomsData = () => {
  * ! Should'nt be integrated without testing
  */
 const registerVotes = ({ roomId, userName, teamName, votes }) => {
+  console.log(roomId,userName,teamName,'skdfjlkjfg',votes);
   if (!roomId || !userName || !votes || !teamName) {
     return { status: 0, error: 'Required params are not passed.' };
   }
@@ -393,9 +394,9 @@ const registerVotes = ({ roomId, userName, teamName, votes }) => {
     return { status: 0, error: "Room doesn't meet the requirements." };
   }
 
+
   // for no-param-reassign linting
   let questionVotes = votes;
-  console.log(questionVotes, 'questionVotes', votes, 'votes');
 
   // valid votes only
   questionVotes = questionVotes.filter((id) => allQuestions.includes(id));

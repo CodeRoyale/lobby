@@ -90,7 +90,7 @@ const genericActionCreater =
     let data;
     if (!asynFunc) {
       data = actionResponder(dataFromClient, dataFromServer) || failReply;
-      // console.log(data);
+      console.log(data);
       if (cb) cb(data);
     } else {
       actionResponder(dataFromClient, dataFromServer)
