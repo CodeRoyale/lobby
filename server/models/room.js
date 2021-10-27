@@ -158,7 +158,6 @@ const joinRoom = (user, roomId, teamName) => {
     rooms[roomId].teams[teamName].push(userName);
   } else {
     // else bench the user
-    teamName = '';
     rooms[roomId].state.bench.push(userName);
   }
 
@@ -288,6 +287,7 @@ const createTeam = (user, teamName) => {
   const { userName, roomId } = user;
   // if user not in room or not admin of the room
   const room = rooms[roomId];
+  console.log(roomId, 'yeh dakhhh', room.config.admin, 'dekho', userName);
   if (!roomId || room.config.admin !== userName) {
     return { status: 0, error: 'Only admin can do this' };
   }
@@ -339,10 +339,8 @@ const addPrivateList = (user, privateList) => {
 };
 
 const getRoomData = (user, roomsId) => {
-  console.log(user,'yaha dekh user ko');
   const { roomId } = user;
-  console.log(roomId,'yaha dekho',roomsId);
-  if (roomId !== roomsId)
+  if (user.roomId !== roomsId)
     return { status: 0, error: 'User not in room from room.js' };
   return { status: 1, roomObj: rooms[roomId] };
 };
@@ -397,6 +395,7 @@ const registerVotes = ({ roomId, userName, teamName, votes }) => {
 
   // for no-param-reassign linting
   let questionVotes = votes;
+  console.log(questionVotes, 'questionVotes', votes, 'votes');
 
   // valid votes only
   questionVotes = questionVotes.filter((id) => allQuestions.includes(id));

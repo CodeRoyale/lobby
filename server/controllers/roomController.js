@@ -1,6 +1,6 @@
 const { setRoom } = require('./userController');
 const { getQuestions, getTestcase } = require('../utils/qapiConn');
-const { ROOM_DEFAULTS, ROOM_LIMITS } = require('./config');
+// const { ROOM_DEFAULTS, ROOM_LIMITS } = require('./config');
 const { submitCode } = require('../utils/codeExecution');
 
 // console.log(ROOM_DEFAULTS, ROOM_LIMITS);
@@ -256,14 +256,14 @@ const doVeto = async (quesIds, roomId, count, socket) => {
     let state = 'start';
     const roomCheck = RoomModel.doVetoRequirements({ roomId });
     const room = roomCheck.returnObj;
-
+    const roomObj = RoomModel.doVeto(quesIds, roomId, count, state);
     socket.to(roomId).emit(VETO_START, quesIds);
     socket.emit(VETO_START, quesIds);
 
     resolvers[roomId] = resolve;
     state = 'stop';
     stopTimers[roomId].vetoTimer = setTimeout(() => {
-      const roomObj = RoomModel.doVeto(quesIds, roomId, count, state);
+      RoomModel.doVeto(quesIds, roomId, count, state);
       const results = roomObj.returnObj;
       socket.to(roomId).emit(VETO_STOP, results);
       socket.emit(VETO_STOP, results);
@@ -285,9 +285,10 @@ const startCompetition = async ({ userName }, { socket }) => {
   console.log('Starting competition', userName);
   stopTimers[roomId] = {};
   const allQuestions = await getQuestions(room.competition.veto.quesCount);
-  await doVeto(allQuestions, roomId, room.competition.max_questions, socket);
 
+  await doVeto(allQuestions, roomId, room.competition.max_questions, socket);
   let roomObj = RoomModel.startCompetition(user, state);
+
   socket.to(roomId).emit(COMPETITION_STARTED, roomObj);
   socket.emit(COMPETITION_STARTED, roomObj);
 
@@ -314,7 +315,8 @@ const startCompetition = async ({ userName }, { socket }) => {
 // };
 
 const getRoomData = ({ userName, roomId }) => {
-  const returnObj = RoomModel.getRoomData(userName, roomId);
+  const user = UserController.getUser(userName);
+  const returnObj = RoomModel.getRoomData(user, roomId);
   if (returnObj.status === 0) {
     return returnObj.error;
   }
