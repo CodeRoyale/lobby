@@ -258,7 +258,7 @@ const doVeto = async (quesIds, roomId, count, socket) => {
     let state = 'start';
     const roomCheck = RoomModel.doVetoRequirements({ roomId });
     const room = roomCheck.returnObj;
-    const roomObj = RoomModel.doVeto(quesIds, roomId, count, state);
+    RoomModel.doVeto(quesIds, roomId, count, state);
     socket.to(roomId).emit(VETO_START, quesIds);
     socket.emit(VETO_START, quesIds);
 
@@ -287,7 +287,7 @@ const startCompetition = async ({ userName }, { socket }) => {
   console.log('Starting competition', userName);
   stopTimers[roomId] = {};
   const allQuestions = await getQuestions(room.competition.veto.quesCount);
-  
+
   await doVeto(allQuestions, roomId, room.competition.maxQuestions, socket);
   let roomObj = RoomModel.startCompetition(user, state);
 
@@ -377,7 +377,7 @@ const codeSubmission = async (
     if (allPass) {
       // tell everyone except user
       let state = 'one-pass';
-      const roomObj = RoomModel.codeSubmission(roomId, state, teamName, quesId);
+      RoomModel.codeSubmission(roomId, state, teamName, quesId);
       // console.log(roomObj);
 
       socket.to(roomId).emit(SUCCESSFULLY_SUBMITTED, { problemCode, teamName });

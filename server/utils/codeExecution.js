@@ -216,7 +216,7 @@ const submitCode = (testCase, code, langId, callback) => {
   const bodyData = createBody(testCase, code, langId);
 
   // do a batch submission with url and submission data
-  postData(postUrl, bodyData)
+  postData(bodyData)
     // response data is send in data write with then and it contains all tokens
     .then((data) => {
       // parsing all data to get tokens using createUrl
