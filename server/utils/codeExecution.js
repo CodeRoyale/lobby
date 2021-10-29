@@ -1,7 +1,5 @@
 // NEEDS REFACTOR
 
-const postUrl = 'www.example.com';
-
 // testcases encoding to base64
 const testcasestobase64 = (test) => {
   const testcases = [];
