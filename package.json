@@ -20,7 +20,8 @@
   "lint-staged": {
     "*.js": [
       "npm run prettier:write",
-      "npm run lint:fix"
+      "npm run lint:fix",
+      "git add"
     ]
   },
   "keywords": [],
