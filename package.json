@@ -18,7 +18,7 @@
     }
   },
   "lint-staged": {
-    "*.js": [
+    "./server/*.js": [
       "npm run prettier:write",
       "npm run lint:fix",
       "git add"
@@ -44,7 +44,7 @@
     "eslint-plugin-import": "^2.21.2",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.1.4",
-    "husky": "^7.0.4",
+    "husky": "^4.3.8",
     "lint-staged": "^11.2.6",
     "nodemon": "^2.0.4",
     "prettier": "^2.0.5"
