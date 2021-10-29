@@ -12,16 +12,16 @@
     "prettier:check": "prettier --check ./server",
     "prettier:write": "prettier --write ./server"
   },
-  "lint-staged": {
-    "*": [
-      "npm run prettier:write",
-      "npm run lint"
-    ]
-  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
     }
+  },
+  "lint-staged": {
+    "*.js": [
+      "npm run prettier:write",
+      "npm run lint"
+    ]
   },
   "keywords": [],
   "author": "",
