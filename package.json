@@ -18,7 +18,7 @@
     }
   },
   "lint-staged": {
-    "./server/*.js": [
+    "*.js": [
       "npm run prettier:write",
       "npm run lint:fix",
       "git add"
