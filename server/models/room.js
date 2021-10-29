@@ -29,7 +29,7 @@ const ROOM_DEFAULTS = {
   maxPerRoom: 25,
   competitionTimelimit: 2700000,
   competitionMaxQues: 3,
-  // should be less than number of questions , but fuck it
+  // should be less than number of questions
   vetoMaxVote: 1,
   vetoTimeLimit: 300000,
   vetoQuestionCount: 6,
