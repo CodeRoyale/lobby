@@ -1,9 +1,8 @@
 const { setRoom } = require('./userController');
 const { getQuestions, getTestcase } = require('../utils/qapiConn');
-// const { ROOM_DEFAULTS, ROOM_LIMITS } = require('./config');
+
 const { submitCode } = require('../utils/codeExecution');
 
-// console.log(ROOM_DEFAULTS, ROOM_LIMITS);
 const {
   ROOM_UPDATED,
   RCV_MSG,
@@ -46,7 +45,7 @@ const createRoom = (config, { socket }) => {
     return { err: roomObj.error };
   }
   const roomId = roomObj.returnObj.config.id;
-  // console.log('roomId from roomController createRoom()', roomId);
+
   UserController.updateUser({
     userName: config.userName,
     roomId,
@@ -71,7 +70,7 @@ const joinRoom = ({ userName, roomId, teamName }, { socket }) => {
     type: JOINED_ROOM,
     data: { userName, profilePicture: user.profilePicture },
   });
-  // console.log(userName, ' joined from ', roomId);
+  console.log(userName, ' joined from ', roomId);
   return roomObj.returnObj;
 };
 
@@ -91,7 +90,7 @@ const removeUserFromRoom = ({ userName }, { socket }) => {
     });
   }
   // user removed from the room
-  // console.log(userName, ' removed from ', roomId);
+  console.log(userName, ' removed from ', roomId);
   setRoom(userName, '');
   // console.log('checking the setRoom the function');
   socket.to(roomId).emit(ROOM_UPDATED, {
@@ -159,14 +158,14 @@ const closeRoom = ({ userName, forceCloseRoom }, { socket }) => {
 
   const allMembers = roomObj.returnObj;
   // console.log(allMembers);
-  // not need to chage room data since we are going to delete it
+  // not need to change room data since we are going to delete it
   allMembers.forEach((users) => {
     // this is a server action notify all
     // TODO --> add kick all and remove functions for sockets
     UserController.updateUser({ users, roomId: '', teamName: '' });
   });
 
-  // delete the stupid room
+  // delete the room
   const dataToEmit = 'Room Closed';
   socket.to(roomId).emit(ROOM_CLOSED, {
     data: { dataToEmit },
@@ -242,7 +241,7 @@ const registerVotes = ({ userName, votes }, { socket }) => {
 
   if (roomObj.status === 2) {
     clearTimeout(stopTimers[roomId].vetoTimer);
-    // stoping code
+    // stopping code
     // TODO --> needs refactoring
     socket.to(roomId).emit(VETO_STOP, roomObj.returnObj);
     socket.emit(VETO_STOP, roomObj.returnObj);

@@ -9,6 +9,5 @@ const ROOM_LIMITS = {
   maxPerTeam: 10,
   maxPerRoom: 250,
 };
-// SOCH SAMJH KE
 
 module.exports = { ROOM_DEFAULTS, ROOM_LIMITS };
