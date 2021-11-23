@@ -1,3 +1,5 @@
+const fetch = require('node-fetch');
+
 const { setRoom } = require('./userController');
 const { getQuestions, getTestcase } = require('../utils/qapiConn');
 
@@ -53,6 +55,29 @@ const createRoom = (config, { socket }) => {
   socket.join(roomId);
   // created room
   // user already has an active room
+  // sending data to discord-bot
+  const content = {
+    content: 'Hey! A new room has been created!',
+    embeds: [
+      {
+        title: 'Room',
+        description: `Admin: ${roomObj.returnObj.config.admin}`,
+        footer: {
+          text: `ID: ${roomObj.returnObj.config.id}`,
+        },
+      },
+    ],
+  };
+  fetch(
+    'https://discord.com/api/webhooks/912594922346016769/w55a5A8IddI71eTsgEDi16cT4lmC3LWXqc0mVCOyg2sPlarn_OMkAOZ0gKPXWN98G-fF',
+    {
+      method: 'POST',
+      body: JSON.stringify(content),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
   return roomObj.returnObj;
 };
 
