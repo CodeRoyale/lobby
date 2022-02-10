@@ -1,6 +1,6 @@
 //* import utils
-
 /// / using relative paths here (need to find better)
+const redisClient = require('../utils/redis');
 
 const auth = require('../utils/auth');
 
@@ -47,13 +47,29 @@ const ROOM_LIMITS = {
   vetoQuestionCount: 25,
 };
 
-const getProperValue = (field, passedValue) => {
+// checking if redis is working or not
+// TODO to be removed later
+async function test() {
+  const TEST_KEY = 'test_node';
+
+  await redisClient.json.set(TEST_KEY, '.', {
+    node: 'blah blah black sheep',
+  });
+  const value = await redisClient.json.get(TEST_KEY, {
+    // JSON Path: .node = the element called 'node' at root level.
+    path: '.node',
+  });
+  console.log(value);
+}
+
+test();
+
+const getProperValue = (field, passedValue) =>
   // * Helper function to get the appropriate value for the field
   // TODO : will require testing
-  return Math.min(ROOM_LIMITS[field], passedValue || ROOM_DEFAULTS[field]);
-};
+  Math.min(ROOM_LIMITS[field], passedValue || ROOM_DEFAULTS[field]);
 
-const createRoom = (roomConfig, user) => {
+const createRoom = async (roomConfig, user) => {
   // TODO : @sastaachar
 
   // TODO : refactor casing (camel -> _ )
@@ -80,6 +96,7 @@ const createRoom = (roomConfig, user) => {
       error: 'There is already a room present by the id given',
     };
   }
+
   const roomObj = {
     config: {
       id: roomId,
@@ -123,6 +140,8 @@ const createRoom = (roomConfig, user) => {
     },
     teams: {},
   };
+
+  // await redisClient.json.set('roomObj', roomObj);
 
   //* Store the room now
   rooms[roomId] = roomObj;
@@ -468,7 +487,7 @@ const startCompetition = (user, state) => {
 const atLeastPerTeam = (roomId, minSize = 1) => {
   // ! changed after linting
   try {
-    Object.values(rooms[roomId].teams).forEach(function (memList) {
+    Object.values(rooms[roomId].teams).forEach((memList) => {
       if (memList.length < minSize) return false;
       return true;
     });

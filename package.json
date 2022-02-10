@@ -32,6 +32,7 @@
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "node-fetch": "^2.6.0",
+    "redis": "^4.0.1",
     "socket.io": "^2.3.0",
     "uuid": "^8.3.0"
   },
