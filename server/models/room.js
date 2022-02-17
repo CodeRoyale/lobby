@@ -49,27 +49,45 @@ const ROOM_LIMITS = {
 
 // checking if redis is working or not
 // TODO to be removed later
-async function test() {
+function test() {
   const TEST_KEY = 'test_node';
+  let value = null;
+  const demoPromise = new Promise((resolve, reject) => {
+    if (value !== null) {
+      value = redisClient.json.get(TEST_KEY, {
+        // JSON Path: .node = the element called 'node' at root level.
+        path: '.node',
+      });
+      resolve('TEST_KEY added');
+    } else {
+      redisClient.json.set(TEST_KEY, '.', {
+        node: 'blah blah black sheep',
+      });
+      reject(new Error('TEST_KEY was not found'));
+    }
+  });
 
-  await redisClient.json.set(TEST_KEY, '.', {
-    node: 'blah blah black sheep',
-  });
-  const value = await redisClient.json.get(TEST_KEY, {
-    // JSON Path: .node = the element called 'node' at root level.
-    path: '.node',
-  });
   console.log(value);
+  return demoPromise;
 }
 
-test();
+const test2 = async () => {
+  try {
+    const response = await test();
+    console.log(`Response received ${response}`);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+test2();
 
 const getProperValue = (field, passedValue) =>
   // * Helper function to get the appropriate value for the field
   // TODO : will require testing
   Math.min(ROOM_LIMITS[field], passedValue || ROOM_DEFAULTS[field]);
 
-const createRoom = async (roomConfig, user) => {
+const createRoom = (roomConfig, user) => {
   // TODO : @sastaachar
 
   // TODO : refactor casing (camel -> _ )
@@ -140,8 +158,11 @@ const createRoom = async (roomConfig, user) => {
     },
     teams: {},
   };
-
-  // await redisClient.json.set('roomObj', roomObj);
+  // try {
+  //   await redisClient.json.set('roomObj', roomObj);
+  // } catch (error) {
+  //   console.log('createRoom error', error);
+  // }
 
   //* Store the room now
   rooms[roomId] = roomObj;
