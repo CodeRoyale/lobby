@@ -14,11 +14,11 @@ const addUser = ({
       throw new Error('Give all parameters');
     }
     if (users[userName]) {
-      // console.log(`${userName} reconnected`);
+      console.log(`${userName} reconnected`);
       users[userName].socketId = socketId;
       return { status: 1, userObj: users[userName] };
     }
-    // console.log(`${userName} added`);
+    console.log(`${userName} added`);
     const newUser = {
       socketId: socketId,
       roomId: roomId,

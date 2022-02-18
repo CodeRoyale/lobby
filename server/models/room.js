@@ -1,6 +1,6 @@
 //* import utils
 /// / using relative paths here (need to find better)
-const redisClient = require('../utils/redis');
+// const redisClient = require('../utils/redis');
 
 const auth = require('../utils/auth');
 
@@ -49,38 +49,38 @@ const ROOM_LIMITS = {
 
 // checking if redis is working or not
 // TODO to be removed later
-function test() {
-  const TEST_KEY = 'test_node';
-  let value = null;
-  const demoPromise = new Promise((resolve, reject) => {
-    if (value !== null) {
-      value = redisClient.json.get(TEST_KEY, {
-        // JSON Path: .node = the element called 'node' at root level.
-        path: '.node',
-      });
-      resolve('TEST_KEY added');
-    } else {
-      redisClient.json.set(TEST_KEY, '.', {
-        node: 'blah blah black sheep',
-      });
-      reject(new Error('TEST_KEY was not found'));
-    }
-  });
+// function test() {
+//   const TEST_KEY = 'test_node';
+//   let value = null;
+//   const demoPromise = new Promise((resolve, reject) => {
+//     if (value !== null) {
+//       value = redisClient.json.get(TEST_KEY, {
+//         // JSON Path: .node = the element called 'node' at root level.
+//         path: '.node',
+//       });
+//       resolve('TEST_KEY added');
+//     } else {
+//       redisClient.json.set(TEST_KEY, '.', {
+//         node: 'blah blah black sheep',
+//       });
+//       reject(new Error('TEST_KEY was not found'));
+//     }
+//   });
 
-  console.log(value);
-  return demoPromise;
-}
+//   console.log(value);
+//   return demoPromise;
+// }
 
-const test2 = async () => {
-  try {
-    const response = await test();
-    console.log(`Response received ${response}`);
-  } catch (err) {
-    console.log(err);
-  }
-};
+// const test2 = async () => {
+//   try {
+//     const response = await test();
+//     console.log(`Response received ${response}`);
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
 
-test2();
+// test2();
 
 const getProperValue = (field, passedValue) =>
   // * Helper function to get the appropriate value for the field
