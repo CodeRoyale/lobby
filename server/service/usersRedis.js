@@ -2,10 +2,10 @@ const redisClient = require('../utils/redis');
 
 const USERS_KEY = 'users';
 
+// Get users from Redis
 const getUsersStore = async () => {
   try {
-    let users = null;
-    users = await redisClient.json.get(USERS_KEY, {
+    const users = await redisClient.json.get(USERS_KEY, {
       // JSON Path: .node = the element called 'node' at root level.
       path: '.',
     });
@@ -16,7 +16,15 @@ const getUsersStore = async () => {
   }
 };
 
-const updateUsersStore = async () => {};
+// Update users in Redis
+const updateUsersStore = async (data) => {
+  try {
+    return await redisClient.json.set(USERS_KEY, '.', data);
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
 
 module.exports = {
   getUsersStore,

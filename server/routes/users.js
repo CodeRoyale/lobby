@@ -2,13 +2,13 @@ const express = require('express');
 
 const router = express.Router();
 
-const { getUserData } = require('../controllers/userController');
+const { getUsersData } = require('../controllers/userController');
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   res.header('Content-Type', 'application/json');
   res.send(
     `CodeRoyale Lobby Server is up and running. ${JSON.stringify(
-      getUserData(),
+      await getUsersData(),
       null,
       4
     )}`

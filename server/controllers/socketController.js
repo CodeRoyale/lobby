@@ -41,7 +41,7 @@ const { findSoloMatch } = require('./publicRooms');
 
 const { checkToken } = require('../utils/auth');
 
-const authUser = (socket, next) => {
+const authUser = async (socket, next) => {
   try {
     // check the token
     // token format "Bearer Token"
@@ -50,9 +50,15 @@ const authUser = (socket, next) => {
 
     // if successful
     if (payload) {
-      // connection accepted
-      // now check if user is already connected or not
-      const userState = addUser(payload.userName, socket.id, payload.picture);
+      // Connection accepted so store details of user
+      const userState = await addUser({
+        userName: payload.userName,
+        socketId: socket.id,
+        profilePicture: payload.picture,
+        rank: 1,
+        roomId: '',
+        teamName: '',
+      });
       if (userState) {
         socket.emit(CONNECTION_ACK, userState);
         // eslint-disable-next-line no-param-reassign
@@ -62,7 +68,6 @@ const authUser = (socket, next) => {
         throw new Error('Already Conected');
       }
     } else {
-      // console.log('Invalid token');
       socket.emit(CONNECTION_DENY);
       throw new Error('Auth failed');
     }
@@ -106,16 +111,16 @@ const genericActionCreater =
   };
 
 const handleUserEvents = ({ socket, io }) => {
-  socket.on(CREATE_ROOM, genericActionCreater(createRoom, { socket }));
-  socket.on(JOIN_ROOM, genericActionCreater(joinRoom, { socket }));
-  socket.on(CREATE_TEAM, genericActionCreater(createTeam, { socket }));
-  socket.on(JOIN_TEAM, genericActionCreater(joinTeam, { socket }));
-  socket.on(CLOSE_ROOM, genericActionCreater(closeRoom, { socket }));
-  socket.on(SEND_MSG, genericActionCreater(forwardMsg, { socket }));
-  socket.on(LEAVE_TEAM, genericActionCreater(leaveTeam, { socket }));
-  socket.on(GET_ROOM, genericActionCreater(getRoomData, { socket }));
-  socket.on(GET_USER, genericActionCreater(getUser, { socket }));
-  socket.on(VETO_VOTES, genericActionCreater(registerVotes, { socket }));
+  socket.on(CREATE_ROOM, genericActionCreater(createRoom, { socket }, true));
+  socket.on(JOIN_ROOM, genericActionCreater(joinRoom, { socket }, true));
+  socket.on(CREATE_TEAM, genericActionCreater(createTeam, { socket }, true));
+  socket.on(JOIN_TEAM, genericActionCreater(joinTeam, { socket }, true));
+  socket.on(CLOSE_ROOM, genericActionCreater(closeRoom, { socket }, true));
+  socket.on(SEND_MSG, genericActionCreater(forwardMsg, { socket }, true));
+  socket.on(LEAVE_TEAM, genericActionCreater(leaveTeam, { socket }, true));
+  socket.on(GET_ROOM, genericActionCreater(getRoomData, { socket }, true));
+  socket.on(GET_USER, genericActionCreater(getUser, { socket }, true));
+  socket.on(VETO_VOTES, genericActionCreater(registerVotes, { socket }, true));
   socket.on(
     START_COMPETITION,
     genericActionCreater(startCompetition, { socket }, true)
@@ -124,7 +129,10 @@ const handleUserEvents = ({ socket, io }) => {
     CODE_SUBMISSION,
     genericActionCreater(codeSubmission, { socket }, true)
   );
-  socket.on(ADD_PRIVATE_LIST, genericActionCreater(addPrivateList, { socket }));
+  socket.on(
+    ADD_PRIVATE_LIST,
+    genericActionCreater(addPrivateList, { socket }, true)
+  );
   socket.on(
     FIND_SOLO_MATCH,
     // needs io to contact specific users

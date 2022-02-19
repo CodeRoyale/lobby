@@ -1,15 +1,21 @@
 const UserModel = require('../models/user');
 
-// [userID] : {     }
+// This is the controller that stores all user data in Redis
 
-// all details related to a user connected to socket will be stored here
-
-const addUser = (userName, socketId, profilePicture, rank = 10) => {
-  const returnObj = UserModel.addUser({
+// Store new user connected through web sockets details
+const addUser = async ({
+  userName,
+  socketId,
+  profilePicture,
+  rank = 1,
+  roomId = '',
+  teamName = '',
+}) => {
+  const returnObj = await UserModel.addUser({
     userName,
     socketId,
-    // roomId,
-    // teamName,
+    roomId,
+    teamName,
     rank,
     profilePicture,
   });
@@ -17,29 +23,13 @@ const addUser = (userName, socketId, profilePicture, rank = 10) => {
     console.log(returnObj.error);
     return false;
   }
-  if (returnObj.status === 1) {
-    return returnObj.userObj;
-  }
   return returnObj.userObj;
 };
 
-// const removeUser = (userName) => {
-// 	try {
-// 		if (users[userName]) {
-// 			console.log(userName + ' removed');
-// 			delete users[userName];
-// 			return true;
-// 		}
-// 		return false;
-// 	} catch (err) {
-// 		return err.message || false;
-// 	}
-// };
-
-// this is just for extra checking
-// can change roomId and teamName
-
-const updateUser = (updatedUser) => {
+// Update details of user
+const updateUser = async (updatedUser) => {
+  // this is just for extra checking
+  // can change roomId and teamName
   const check = [
     'userName',
     'socketId',
@@ -57,21 +47,32 @@ const updateUser = (updatedUser) => {
   // 	check.includes(ele)
   // );
   // console.log(newUpdated);
-  const returnObj = UserModel.updateUser(newUpdated);
+  const returnObj = await UserModel.updateUser(newUpdated);
   return returnObj.userObj;
 };
 
-const getUser = (userName) => {
-  const returnObj = UserModel.getUser(userName);
+// Remove a user's details
+const removeUser = async (userName) => {
+  const returnObj = await UserModel.removeUser(userName);
+  if (returnObj.status === 0) {
+    return returnObj.error;
+  }
+  return returnObj.users;
+};
+
+// Get a single user's data
+const getUser = async (userName) => {
+  const returnObj = await UserModel.getUser(userName);
   if (returnObj.status === 0) {
     return returnObj.error;
   }
   return returnObj.userObj;
 };
 
-const getUserData = () => {
+// Get all user's data
+const getUsersData = async () => {
   // need proper authorizations
-  const returnObj = UserModel.getUserData();
+  const returnObj = await UserModel.getUsersData();
   if (returnObj.status === 0) {
     return returnObj.error;
   }
@@ -80,7 +81,8 @@ const getUserData = () => {
 
 module.exports = {
   addUser,
-  getUserData,
-  getUser,
   updateUser,
+  removeUser,
+  getUsersData,
+  getUser,
 };
