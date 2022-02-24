@@ -39,7 +39,7 @@ const createRoom = async (config, { socket }) => {
     return false;
   }
   // createRoom function to be called by the controller.
-  const roomObj = RoomModel.createRoom(config, user);
+  const roomObj = await RoomModel.createRoom(config, user);
   if (roomObj.status === 0) {
     return { err: roomObj.error };
   }
@@ -59,7 +59,7 @@ const createRoom = async (config, { socket }) => {
 // TODO -> refactor this fn if should return error
 const joinRoom = async ({ userName, roomId, teamName }, { socket }) => {
   const user = await UserController.getUser(userName);
-  const roomObj = RoomModel.joinRoom(user, roomId, teamName);
+  const roomObj = await RoomModel.joinRoom(user, roomId, teamName);
   if (roomObj.status === 0) {
     return { err: roomObj.error };
   }

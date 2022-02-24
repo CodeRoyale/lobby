@@ -3,6 +3,7 @@
 // const redisClient = require('../utils/redis');
 
 const auth = require('../utils/auth');
+const redisClient = require('../service/roomsRedis');
 
 // this is my db for now
 const rooms = {};
@@ -87,13 +88,12 @@ const getProperValue = (field, passedValue) =>
   // TODO : will require testing
   Math.min(ROOM_LIMITS[field], passedValue || ROOM_DEFAULTS[field]);
 
-const createRoom = (roomConfig, user) => {
+const createRoom = async (roomConfig, user) => {
   // TODO : @sastaachar
 
   // TODO : refactor casing (camel -> _ )
 
   // check req params
-
   if (!roomConfig.userName) {
     return {
       status: 0,
@@ -107,104 +107,113 @@ const createRoom = (roomConfig, user) => {
 
   // ! change this fn
   const roomId = auth.encryptData();
+  try {
+    const roomsFromRedis = await redisClient.getRoomsStore();
 
-  if (rooms[roomId]) {
-    return {
-      status: 0,
-      error: 'There is already a room present by the id given',
-    };
-  }
+    if (roomsFromRedis[roomId]) {
+      return {
+        status: 0,
+        error: 'There is already a room present by the ID given',
+      };
+    }
 
-  const roomObj = {
-    config: {
-      id: roomId,
-      admin: roomConfig.userName,
-      maxTeams: getProperValue('maxTeams', roomConfig.maxTeams),
-      maxPerTeam: getProperValue('maxPerTeam', roomConfig.maxPerTeam),
-      privateRoom: roomConfig.privateRoom === false,
-      maxPerRoom: getProperValue('maxPerRoom', roomConfig.maxPerRoom),
-      createdAt: Date.now(),
-    },
-    state: {
-      privateList: [],
-      curMemCount: 1,
-      banList: [],
-      bench: [roomConfig.userName],
-      profilePictures: { [roomConfig.userName]: user.profilePicture },
-    },
-    competition: {
-      questions: {},
-      maxQuestions: getProperValue(
-        'competitionMaxQues',
-        roomConfig.maxQuestions
-      ),
-      contestStartedAt: null,
-      contnetEndedAt: null,
-      contestOn: false,
-      timeLimit: getProperValue('competitionTimelimit', roomConfig.timeLimit),
-      veto: {
-        allQuestions: {},
-        votes: {},
-        voted: [],
-        vetoOn: false,
-        maxVote: getProperValue('vetoMaxVote', roomConfig.maxVote),
-        timeLimit: getProperValue('vetoTimeLimit', roomConfig.vetoTimeLimit),
-        quesCount: getProperValue(
-          'vetoQuestionCount',
-          roomConfig.vetoQuesCount
-        ),
+    const roomObj = {
+      config: {
+        id: roomId,
+        admin: roomConfig.userName,
+        maxTeams: getProperValue('maxTeams', roomConfig.maxTeams),
+        maxPerTeam: getProperValue('maxPerTeam', roomConfig.maxPerTeam),
+        privateRoom: roomConfig.privateRoom === false,
+        maxPerRoom: getProperValue('maxPerRoom', roomConfig.maxPerRoom),
+        createdAt: Date.now(),
       },
-      scoreboard: {},
-    },
-    teams: {},
-  };
-  // try {
-  //   await redisClient.json.set('roomObj', roomObj);
-  // } catch (error) {
-  //   console.log('createRoom error', error);
-  // }
+      state: {
+        privateList: [],
+        curMemCount: 1,
+        banList: [],
+        bench: [roomConfig.userName],
+        profilePictures: { [roomConfig.userName]: user.profilePicture },
+      },
+      competition: {
+        questions: {},
+        maxQuestions: getProperValue(
+          'competitionMaxQues',
+          roomConfig.maxQuestions
+        ),
+        contestStartedAt: null,
+        contnetEndedAt: null,
+        contestOn: false,
+        timeLimit: getProperValue('competitionTimelimit', roomConfig.timeLimit),
+        veto: {
+          allQuestions: {},
+          votes: {},
+          voted: [],
+          vetoOn: false,
+          maxVote: getProperValue('vetoMaxVote', roomConfig.maxVote),
+          timeLimit: getProperValue('vetoTimeLimit', roomConfig.vetoTimeLimit),
+          quesCount: getProperValue(
+            'vetoQuestionCount',
+            roomConfig.vetoQuesCount
+          ),
+        },
+        scoreboard: {},
+      },
+      teams: {},
+    };
 
-  //* Store the room now
-  rooms[roomId] = roomObj;
-  return { status: 1, returnObj: roomObj };
+    //* Store the room now
+    roomsFromRedis[roomId] = roomObj;
+    await redisClient.updateRoomsStore(roomsFromRedis);
+    return { status: 1, returnObj: roomObj };
+  } catch (error) {
+    return { status: 0, error: error.message };
+  }
 };
 
-const joinRoom = (user, roomId, teamName) => {
-  const { userName, profilePicture } = user;
-  if (
-    !rooms[roomId] &&
-    (!rooms[roomId].config.privateRoom ||
-      !rooms[roomId].state.privateList.includes(userName)) &&
-    rooms[roomId].state.curMemCount > rooms[roomId].config.maxPerRoom
-  ) {
-    return { status: 0, error: "The User doesn't meet the specifications" };
+const joinRoom = async (user, roomId, teamName) => {
+  try {
+    const { userName, profilePicture } = user;
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    if (
+      !roomsFromRedis[roomId] &&
+      (!roomsFromRedis[roomId].config.privateRoom ||
+        !roomsFromRedis[roomId].state.privateList.includes(userName)) &&
+      roomsFromRedis[roomId].state.curMemCount >
+        roomsFromRedis[roomId].config.maxPerRoom
+    ) {
+      return { status: 0, error: "The User doesn't meet the specifications" };
+    }
+    // (only run if room exists) and (user is allowed if private) and (space is there)
+
+    // quit from prev room and try again
+    if (user.roomId) {
+      // already in a group don't allow
+      return { status: 1, error: 'User already in room' };
+    }
+
+    // successful (user will now be added)
+
+    if (
+      teamName &&
+      roomsFromRedis[roomId].team[teamName] &&
+      roomsFromRedis[roomId].teams[teamName].length <
+        roomsFromRedis[roomId].config.maxPerTeam
+    ) {
+      // if user passes a team and that team exist and there is space in that team
+      roomsFromRedis[roomId].teams[teamName].push(userName);
+    } else {
+      // else bench the user
+      roomsFromRedis[roomId].state.bench.push(userName);
+    }
+
+    // user has been added to bench or a Team
+    roomsFromRedis[roomId].state.curMemCount += 1;
+    roomsFromRedis[roomId].state.profilePictures[userName] = profilePicture;
+    await redisClient.updateRoomsStore();
+    return { status: 2, returnObj: roomsFromRedis[roomId] };
+  } catch (error) {
+    return { status: 0, error: error.message };
   }
-  // (only run if room exists) and (user is allowed if private) and (space is there)
-
-  // quit from prev room and try again
-  if (user.roomId) {
-    // already in a group don't allow
-    return { status: 1, error: 'User already in room' };
-  }
-
-  // successful (user will now be added)
-
-  if (
-    teamName &&
-    rooms[roomId].team[teamName] &&
-    rooms[roomId].teams[teamName].length < rooms[roomId].config.maxPerTeam
-  ) {
-    // if user passes a team and that team exist and there is space in that team
-    rooms[roomId].teams[teamName].push(userName);
-  } else {
-    // else bench the user
-    rooms[roomId].state.bench.push(userName);
-  }
-
-  // user has been added to bench or a Team
-  rooms[roomId].state.curMemCount += 1;
-  rooms[roomId].state.profilePictures[userName] = profilePicture;
-  return { status: 2, returnObj: rooms[roomId] };
 };
 
 /**
