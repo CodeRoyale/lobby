@@ -80,7 +80,7 @@ const joinRoom = async ({ userName, roomId, teamName }, { socket }) => {
 const removeUserFromRoom = async ({ userName }, { socket }) => {
   const user = await UserController.getUser(userName);
   const { roomId, teamName } = user;
-  const roomObj = RoomModel.removeUserFromRoom(user);
+  const roomObj = await RoomModel.removeUserFromRoom(user);
   if (roomObj.status === 0) {
     return false;
   }
@@ -107,7 +107,7 @@ const removeUserFromRoom = async ({ userName }, { socket }) => {
 const createTeam = async ({ userName, teamName }, { socket }) => {
   const user = await UserController.getUser(userName);
   const { roomId } = user;
-  const roomObj = RoomModel.createTeam(user, teamName);
+  const roomObj = await RoomModel.createTeam(user, teamName);
   if (roomObj.status === 0) {
     return { err: roomObj.error };
   }
@@ -121,7 +121,7 @@ const createTeam = async ({ userName, teamName }, { socket }) => {
 
 const joinTeam = async ({ userName, teamName }, { socket }) => {
   const user = await UserController.getUser(userName);
-  const roomObj = RoomModel.joinTeam(user, teamName);
+  const roomObj = await RoomModel.joinTeam(user, teamName);
   if (roomObj.status === 0) {
     return { err: roomObj.error };
   }
