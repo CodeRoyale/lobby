@@ -380,38 +380,49 @@ const createTeam = async (user, teamName) => {
   }
 };
 
-const leaveTeam = (user) => {
-  const { roomId, teamName, userName } = user;
-  const room = rooms[roomId];
+const leaveTeam = async (user) => {
+  try {
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    const { roomId, teamName, userName } = user;
+    const room = roomsFromRedis[roomId];
 
-  // check if in a room and in a team
-  if (!roomId && !teamName) {
-    return {
-      status: 0,
-      error: 'User does not meet the specifications to leave the team',
-    };
+    // check if in a room and in a team
+    if (!roomId && !teamName) {
+      return {
+        status: 0,
+        error: 'User does not meet the specifications to leave the team',
+      };
+    }
+
+    const newTeam = room.teams[teamName].filter((ele) => ele !== userName);
+    room.teams[teamName] = newTeam;
+    room.state.bench.push(userName);
+
+    return { status: 1, returnObj: room.teams };
+  } catch (error) {
+    return { status: 0, error: error.message };
   }
-
-  const newTeam = room.teams[teamName].filter((ele) => ele !== userName);
-  room.teams[teamName] = newTeam;
-  room.state.bench.push(userName);
-
-  return { status: 1, returnObj: room.teams };
 };
 
-const addPrivateList = (user, privateList) => {
-  const { userName, roomId } = user;
-  const room = rooms[roomId];
+const addPrivateList = async (user, privateList) => {
+  try {
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    const { userName, roomId } = user;
+    const room = roomsFromRedis[roomId];
 
-  if (!room && room.config.admin !== userName && !room.config.privateRoom) {
-    return { status: 0, error: 'Only admin can do this' };
-  }
-  privateList.forEach((ele) => {
-    if (!room.state.privateList.includes(ele)) {
-      rooms[roomId].state.privateList.push(ele);
+    if (!room && room.config.admin !== userName && !room.config.privateRoom) {
+      return { status: 0, error: 'Only admin can do this' };
     }
-  });
-  return { status: 1, returnObj: rooms[roomId].state.privateList };
+    privateList.forEach((ele) => {
+      if (!room.state.privateList.includes(ele)) {
+        roomsFromRedis[roomId].state.privateList.push(ele);
+      }
+    });
+    await redisClient.updateRoomsStore(roomsFromRedis);
+    return { status: 1, returnObj: rooms[roomId].state.privateList };
+  } catch (error) {
+    return { status: 0, error: error.message };
+  }
 };
 
 const getRoomData = (user, roomsId) => {

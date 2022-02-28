@@ -138,7 +138,7 @@ const joinTeam = async ({ userName, teamName }, { socket }) => {
 const leaveTeam = async ({ userName }, { socket }) => {
   const user = await UserController.getUser(userName);
   const { roomId, teamName } = user;
-  const roomObj = RoomModel.leaveTeam(user);
+  const roomObj = await RoomModel.leaveTeam(user);
   if (roomObj.status === 0) {
     return { err: roomObj.error };
   }
@@ -189,7 +189,7 @@ const closeRoom = async ({ userName, forceCloseRoom }, { socket }) => {
 const addPrivateList = async ({ userName, privateList }, { socket }) => {
   // only private rooms can have private lists
   const user = await UserController.getUser(userName);
-  const roomObj = RoomModel.addPrivateList(user, privateList);
+  const roomObj = await RoomModel.addPrivateList(user, privateList);
 
   if (roomObj.status === 0) {
     return { err: roomObj.error };
@@ -201,14 +201,6 @@ const addPrivateList = async ({ userName, privateList }, { socket }) => {
   });
   return roomObj.returnObj;
 };
-
-// const handleUserDisconnect = ({ userName }) => {
-//   // need to fill this
-//   try {
-//   } catch (err) {
-//     return { error: err.message };
-//   }
-// };
 
 const forwardMsg = async ({ userName, content, toTeam }, { socket }) => {
   try {
