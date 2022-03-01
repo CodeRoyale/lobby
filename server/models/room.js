@@ -264,7 +264,7 @@ const removeUserFromRoom = async (user) => {
 
     await redisClient.updateRoomsStore(roomsFromRedis);
 
-    return { status, returnObj: rooms[roomId] };
+    return { status, returnObj: roomsFromRedis[roomId] };
   } catch (error) {
     return { status: 0, error: error.message };
   }
@@ -374,7 +374,7 @@ const createTeam = async (user, teamName) => {
     }
     room.teams[teamName] = [];
     await redisClient.updateRoomsStore(roomsFromRedis);
-    return { status: 1, returnObj: rooms[roomId].teams };
+    return { status: 1, returnObj: roomsFromRedis[roomId].teams };
   } catch (error) {
     return { status: 0, error: error.message };
   }
@@ -419,7 +419,7 @@ const addPrivateList = async (user, privateList) => {
       }
     });
     await redisClient.updateRoomsStore(roomsFromRedis);
-    return { status: 1, returnObj: rooms[roomId].state.privateList };
+    return { status: 1, returnObj: roomsFromRedis[roomId].state.privateList };
   } catch (error) {
     return { status: 0, error: error.message };
   }
@@ -464,68 +464,81 @@ const getRoomsData = async () => {
  * TODO : @naven @chirag test this function
  * ! Should'nt be integrated without testing
  */
-const registerVotes = ({ roomId, userName, teamName, votes }) => {
-  if (!roomId || !userName || !votes || !teamName) {
-    return { status: 0, error: 'Required params are not passed.' };
+const registerVotes = async ({ roomId, userName, teamName, votes }) => {
+  try {
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    if (!roomId || !userName || !votes || !teamName) {
+      return { status: 0, error: 'Required params are not passed.' };
+    }
+
+    const room = roomsFromRedis[roomId];
+    // * user should be in a team
+    if (
+      !room ||
+      !room.teams[teamName] ||
+      !room.teams[teamName].includes(userName)
+    ) {
+      return { status: 0, error: "User doesn't meet the requirements." };
+    }
+
+    const { vetoOn, voted, allQuestions, maxVote } = room.competition.veto;
+    // * veto should be on
+    // * user should have not voted
+    if (!vetoOn || voted.includes(userName)) {
+      return { status: 0, error: "Room doesn't meet the requirements." };
+    }
+
+    // for no-param-reassign linting
+    let questionVotes = votes;
+
+    // valid votes only
+    questionVotes = questionVotes.filter((id) => allQuestions.includes(id));
+    // questionVotes should be unique
+    questionVotes = [...new Set(questionVotes)];
+    // should not excede maxquestionVotes allowed
+    // we will only take Min(questionVotes.length, maxVote) questionVotes
+    if (questionVotes.length > maxVote)
+      questionVotes = questionVotes.slice(0, maxVote);
+    // note questionVotes
+    questionVotes.forEach((id) => {
+      roomsFromRedis[roomId].competition.veto.votes[id] += 1;
+    });
+    roomsFromRedis[roomId].competition.veto.voted.push(userName);
+
+    // voted users = total users
+    // TODO --> @naveen
+    //           * NOW -> O(n*m)
+    //           * store calculated in obj to make in O(n)
+    let totalRequired = 0;
+    Object.keys(roomsFromRedis[roomId].teams).forEach((teams) => {
+      totalRequired += roomsFromRedis[roomId].teams[teams].length;
+    });
+
+    if (
+      totalRequired === roomsFromRedis[roomId].competition.veto.voted.length
+    ) {
+      // we got all the required votes
+      roomsFromRedis[roomId].competition.veto.vetoOn = false;
+      let results = Object.entries(
+        roomsFromRedis[roomId].competition.veto.votes
+      );
+      results = results
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, roomsFromRedis[roomId].competition.maxQuestions);
+      // take only qids
+      results = results.map((ele) => ele[0]);
+      roomsFromRedis[roomId].competition.questions = results;
+      await redisClient.updateRoomsStore(roomsFromRedis);
+      return { status: 2, returnObj: results };
+    }
+    await redisClient.updateRoomsStore(roomsFromRedis);
+    return {
+      status: 1,
+      returnObj: roomsFromRedis[roomId].competition.veto.votes,
+    };
+  } catch (error) {
+    return { status: 0, error: error.message };
   }
-
-  const room = rooms[roomId];
-  // * user should be in a team
-  if (
-    !room ||
-    !room.teams[teamName] ||
-    !room.teams[teamName].includes(userName)
-  ) {
-    return { status: 0, error: "User doesn't meet the requirements." };
-  }
-
-  const { vetoOn, voted, allQuestions, maxVote } = room.competition.veto;
-  // * veto should be on
-  // * user should have not voted
-  if (!vetoOn || voted.includes(userName)) {
-    return { status: 0, error: "Room doesn't meet the requirements." };
-  }
-
-  // for no-param-reassign linting
-  let questionVotes = votes;
-
-  // valid votes only
-  questionVotes = questionVotes.filter((id) => allQuestions.includes(id));
-  // questionVotes should be unique
-  questionVotes = [...new Set(questionVotes)];
-  // should not excede maxquestionVotes allowed
-  // we will only take Min(questionVotes.length, maxVote) questionVotes
-  if (questionVotes.length > maxVote)
-    questionVotes = questionVotes.slice(0, maxVote);
-  // note questionVotes
-  questionVotes.forEach((id) => {
-    rooms[roomId].competition.veto.votes[id] += 1;
-  });
-  rooms[roomId].competition.veto.voted.push(userName);
-
-  // voted users = total users
-  // TODO --> @naveen
-  //           * NOW -> O(n*m)
-  //           * store calculated in obj to make in O(n)
-  let totalRequired = 0;
-  Object.keys(rooms[roomId].teams).forEach((teams) => {
-    totalRequired += rooms[roomId].teams[teams].length;
-  });
-
-  if (totalRequired === rooms[roomId].competition.veto.voted.length) {
-    // we got all the required votes
-    rooms[roomId].competition.veto.vetoOn = false;
-    let results = Object.entries(rooms[roomId].competition.veto.votes);
-    results = results
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, rooms[roomId].competition.maxQuestions);
-    // take only qids
-    results = results.map((ele) => ele[0]);
-    rooms[roomId].competition.questions = results;
-    return { status: 2, returnObj: results };
-  }
-
-  return { status: 1, returnObj: rooms[roomId].competition.veto.votes };
 };
 
 /**

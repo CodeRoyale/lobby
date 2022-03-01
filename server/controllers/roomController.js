@@ -222,7 +222,7 @@ const forwardMsg = async ({ userName, content, toTeam }, { socket }) => {
 
 const registerVotes = async ({ userName, votes }, { socket }) => {
   const { roomId, teamName } = await UserController.getUser(userName);
-  const roomObj = RoomModel.registerVotes({
+  const roomObj = await RoomModel.registerVotes({
     roomId,
     userName,
     teamName,
