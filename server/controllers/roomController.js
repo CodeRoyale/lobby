@@ -319,8 +319,8 @@ const getRoomData = async ({ userName, roomId }) => {
   return returnObj.roomObj;
 };
 
-const getRoomsData = () => {
-  const returnObj = RoomModel.getRoomsData();
+const getRoomsData = async () => {
+  const returnObj = await RoomModel.getRoomsData();
   if (returnObj.status === 0) {
     return returnObj.error;
   }

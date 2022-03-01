@@ -437,10 +437,11 @@ const getRoomData = async (user, roomsId) => {
   }
 };
 
-const getRoomsData = () => {
+const getRoomsData = async () => {
   // need proper authorizations
   try {
-    return { status: 1, roomObj: rooms };
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    return { status: 1, roomObj: roomsFromRedis };
   } catch (err) {
     return { status: 0, error: err.message || false };
   }
