@@ -154,7 +154,7 @@ const leaveTeam = async ({ userName }, { socket }) => {
 const closeRoom = async ({ userName, forceCloseRoom }, { socket }) => {
   const user = await UserController.getUser(userName);
   const { roomId } = user;
-  const roomObj = RoomModel.closeRoom(user, forceCloseRoom);
+  const roomObj = await RoomModel.closeRoom(user, forceCloseRoom);
   if (roomObj.status === 0) {
     return { err: roomObj.error };
   }
@@ -312,18 +312,11 @@ const startCompetition = async ({ userName }, { socket }) => {
 
 const getRoomData = async ({ userName, roomId }) => {
   const user = await UserController.getUser(userName);
-  const returnObj = RoomModel.getRoomData(user, roomId);
+  const returnObj = await RoomModel.getRoomData(user, roomId);
   if (returnObj.status === 0) {
     return returnObj.error;
   }
   return returnObj.roomObj;
-  // try {
-  //   const user = UserController.getUser(userName);
-  //   if (user.roomId !== roomId) throw new Error('User not in room');
-  //   return rooms[roomId];
-  // } catch (err) {
-  //   return { error: err.message };
-  // }
 };
 
 const getRoomsData = () => {

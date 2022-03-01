@@ -425,11 +425,16 @@ const addPrivateList = async (user, privateList) => {
   }
 };
 
-const getRoomData = (user, roomsId) => {
-  const { roomId } = user;
-  if (user.roomId !== roomsId)
-    return { status: 0, error: 'User not in room from room.js' };
-  return { status: 1, roomObj: rooms[roomId] };
+const getRoomData = async (user, roomsId) => {
+  try {
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    const { roomId } = user;
+    if (user.roomId !== roomsId)
+      return { status: 0, error: 'User not in room from room.js' };
+    return { status: 1, roomObj: roomsFromRedis[roomId] };
+  } catch (error) {
+    return { status: 0, error: error.message };
+  }
 };
 
 const getRoomsData = () => {
