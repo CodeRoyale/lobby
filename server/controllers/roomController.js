@@ -272,7 +272,7 @@ const doVeto = async (quesIds, roomId, count, socket) => {
 const startCompetition = async ({ userName }, { socket }) => {
   const user = await UserController.getUser(userName);
   let state = 'start';
-  const roomCheck = RoomModel.startCompetitionRequirements(user);
+  const roomCheck = await RoomModel.startCompetitionRequirements(user);
   if (roomCheck.status === 0) {
     return { err: roomCheck.error };
   }
@@ -283,14 +283,14 @@ const startCompetition = async ({ userName }, { socket }) => {
   const allQuestions = await getQuestions(room.competition.veto.quesCount);
 
   await doVeto(allQuestions, roomId, room.competition.maxQuestions, socket);
-  let roomObj = RoomModel.startCompetition(user, state);
+  let roomObj = await RoomModel.startCompetition(user, state);
 
   socket.to(roomId).emit(COMPETITION_STARTED, roomObj);
   socket.emit(COMPETITION_STARTED, roomObj);
 
   state = 'stop';
-  stopTimers[roomId].competitionTimer = setTimeout(() => {
-    roomObj = RoomModel.startCompetition(user, state);
+  stopTimers[roomId].competitionTimer = setTimeout(async () => {
+    roomObj = await RoomModel.startCompetition(user, state);
     socket.to(roomId).emit(COMPETITION_STOPPED, roomObj.returnObj);
     socket.emit(COMPETITION_STOPPED, roomObj.returnObj);
   }, room.competition.timeLimit);

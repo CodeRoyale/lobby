@@ -141,7 +141,7 @@ const createRoom = async (roomConfig, user) => {
           roomConfig.maxQuestions
         ),
         contestStartedAt: null,
-        contnetEndedAt: null,
+        contestEndedAt: null,
         contestOn: false,
         timeLimit: getProperValue('competitionTimelimit', roomConfig.timeLimit),
         veto: {
@@ -554,21 +554,26 @@ const registerVotes = async ({ roomId, userName, teamName, votes }) => {
  * TODO : @naven @chirag test this function
  * ! Should'nt be integrated without testing
  */
-const startCompetition = (user, state) => {
-  const { roomId } = user;
-  const room = rooms[roomId];
+const startCompetition = async (user, state) => {
+  try {
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    const { roomId } = user;
+    const room = roomsFromRedis[roomId];
 
-  if (state === 'start') {
-    room.competition.contestOn = true;
-    room.competition.contestStartedAt = Date.now();
-    Object.keys(room.teams).forEach((ele) => {
-      room.competition.scoreboard[ele] = [];
-    });
-    return { status: 1, returnObj: room.competition };
+    if (state === 'start') {
+      room.competition.contestOn = true;
+      room.competition.contestStartedAt = Date.now();
+      Object.keys(room.teams).forEach((ele) => {
+        room.competition.scoreboard[ele] = [];
+      });
+      return { status: 1, returnObj: room.competition };
+    }
+    roomsFromRedis[roomId].competition.contestOn = false;
+    roomsFromRedis[roomId].competition.contestEndedAt = Date.now();
+    return { status: 2, roomObj: room.competition };
+  } catch (error) {
+    return { status: 0, error: error.message };
   }
-  rooms[roomId].competition.contestOn = false;
-  rooms[roomId].competition.contnetEndedAt = Date.now();
-  return { status: 2, roomObj: room.competition };
 };
 
 const atLeastPerTeam = (roomId, minSize = 1) => {
@@ -675,7 +680,7 @@ const codeSubmission = (roomId, state, teamName, quesId) => {
   }
 
   rooms[roomId].competition.contestOn = false;
-  rooms[roomId].competition.contnetEndedAt = Date.now();
+  rooms[roomId].competition.contestEndedAt = Date.now();
 
   return { status: 1, returnObj: rooms[roomId].competition };
 };
