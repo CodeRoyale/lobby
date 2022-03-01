@@ -570,16 +570,18 @@ const startCompetition = async (user, state) => {
     }
     roomsFromRedis[roomId].competition.contestOn = false;
     roomsFromRedis[roomId].competition.contestEndedAt = Date.now();
+    await redisClient.updateRoomsStore(roomsFromRedis);
     return { status: 2, roomObj: room.competition };
   } catch (error) {
     return { status: 0, error: error.message };
   }
 };
 
-const atLeastPerTeam = (roomId, minSize = 1) => {
+const atLeastPerTeam = async (roomId, minSize = 1) => {
   // ! changed after linting
   try {
-    Object.values(rooms[roomId].teams).forEach((memList) => {
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    Object.values(roomsFromRedis[roomId].teams).forEach((memList) => {
       if (memList.length < minSize) return false;
       return true;
     });
