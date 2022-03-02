@@ -334,7 +334,7 @@ const codeSubmission = async (
   const quesId = problemCode;
   const { roomId, teamName } = await UserController.getUser(userName);
   const testcase = await getTestcase(problemCode);
-  const roomCheck = RoomModel.codeSubmissionRequirements(
+  const roomCheck = await RoomModel.codeSubmissionRequirements(
     roomId,
     teamName,
     testcase,
@@ -344,7 +344,7 @@ const codeSubmission = async (
     return { err: roomCheck.error };
   }
   const room = roomCheck.returnObj;
-  submitCode(testcase, code, langId, (dataFromSubmitCode) => {
+  submitCode(testcase, code, langId, async (dataFromSubmitCode) => {
     let allPass = true;
     dataFromSubmitCode.submissions.forEach((result) => {
       if (result.status_id !== 3) {
@@ -364,7 +364,7 @@ const codeSubmission = async (
     if (allPass) {
       // tell everyone except user
       let state = 'one-pass';
-      RoomModel.codeSubmission(roomId, state, teamName, quesId);
+      await RoomModel.codeSubmission(roomId, state, teamName, quesId);
       // console.log(roomObj);
 
       socket.to(roomId).emit(SUCCESSFULLY_SUBMITTED, { problemCode, teamName });
@@ -378,7 +378,7 @@ const codeSubmission = async (
         if (stopTimers[roomId].competitionTimer)
           clearTimeout(stopTimers[roomId].competitionTimer);
         state = 'all-pass';
-        const tempRoomObj = RoomModel.codeSubmission(roomId, state);
+        const tempRoomObj = await RoomModel.codeSubmission(roomId, state);
         socket.to(roomId).emit(COMPETITION_STOPPED, tempRoomObj.returnObj);
         socket.emit(COMPETITION_STOPPED, tempRoomObj.returnObj);
       }

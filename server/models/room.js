@@ -6,7 +6,7 @@ const auth = require('../utils/auth');
 const redisClient = require('../service/roomsRedis');
 
 // this is my db for now
-const rooms = {};
+// const rooms = {};
 
 // create room
 // joinRoom
@@ -675,32 +675,51 @@ const doVeto = async (quesIds, roomId, count, state) => {
   }
 };
 
-const codeSubmissionRequirements = (roomId, teamName, testcase, langId) => {
-  const room = rooms[roomId];
-  if (
-    rooms[roomId] &&
-    rooms[roomId].teams[teamName] &&
-    rooms[roomId].competition.contestOn &&
-    testcase !== null &&
-    langId !== null
-  ) {
-    return { status: 1, returnObj: room };
+const codeSubmissionRequirements = async (
+  roomId,
+  teamName,
+  testcase,
+  langId
+) => {
+  try {
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    const room = roomsFromRedis[roomId];
+    if (
+      roomsFromRedis[roomId] &&
+      roomsFromRedis[roomId].teams[teamName] &&
+      roomsFromRedis[roomId].competition.contestOn &&
+      testcase !== null &&
+      langId !== null
+    ) {
+      return { status: 1, returnObj: room };
+    }
+    return { status: 0, error: 'Code Submission not allowed now.' };
+  } catch (error) {
+    return { status: 0, error: error.message };
   }
-  return { status: 0, error: 'Code Submission not allowed now.' };
 };
 
-const codeSubmission = (roomId, state, teamName, quesId) => {
-  if (state === 'one-pass') {
-    if (!rooms[roomId].competition.scoreboard[teamName].includes(quesId))
-      rooms[roomId].competition.scoreboard[teamName].push(quesId);
+const codeSubmission = async (roomId, state, teamName, quesId) => {
+  try {
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    if (state === 'one-pass') {
+      if (
+        !roomsFromRedis[roomId].competition.scoreboard[teamName].includes(
+          quesId
+        )
+      )
+        roomsFromRedis[roomId].competition.scoreboard[teamName].push(quesId);
 
-    return { status: 1 };
+      return { status: 1 };
+    }
+
+    roomsFromRedis[roomId].competition.contestOn = false;
+    roomsFromRedis[roomId].competition.contestEndedAt = Date.now();
+    await redisClient.updateRoomsStore(roomsFromRedis);
+    return { status: 1, returnObj: roomsFromRedis[roomId].competition };
+  } catch (error) {
+    return { status: 0, error: error.message };
   }
-
-  rooms[roomId].competition.contestOn = false;
-  rooms[roomId].competition.contestEndedAt = Date.now();
-
-  return { status: 1, returnObj: rooms[roomId].competition };
 };
 module.exports = {
   createRoom,
