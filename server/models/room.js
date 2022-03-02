@@ -597,66 +597,82 @@ const atLeastPerTeam = async (roomId, minSize = 1) => {
   return roomId;
 };
 
-const startCompetitionRequirements = (user) => {
-  const { roomId, userName } = user;
-  const room = rooms[roomId];
+const startCompetitionRequirements = async (user) => {
+  try {
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    const { roomId, userName } = user;
+    const room = roomsFromRedis[roomId];
 
-  // room exists
-  // user is admin
-  // 2 or more members are there
-  // 2 or more teams required
-  // each team should hav atleast member
-  // and no ongoing contest
-  if (
-    !room ||
-    room.config.admin !== userName ||
-    room.state.curMemCount < 2 ||
-    Object.keys(room.teams).length < 2 ||
-    !atLeastPerTeam(roomId) ||
-    room.competition.contestOn ||
-    room.competition.veto.vetoOn
-  ) {
-    return { status: 0, error: "Room doesn't meet the requirements." };
+    // room exists
+    // user is admin
+    // 2 or more members are there
+    // 2 or more teams required
+    // each team should hav atleast member
+    // and no ongoing contest
+    if (
+      !room ||
+      room.config.admin !== userName ||
+      room.state.curMemCount < 2 ||
+      Object.keys(room.teams).length < 2 ||
+      !atLeastPerTeam(roomId) ||
+      room.competition.contestOn ||
+      room.competition.veto.vetoOn
+    ) {
+      return { status: 0, error: "Room doesn't meet the requirements." };
+    }
+    return { status: 1, returnObj: room };
+  } catch (error) {
+    return { status: 0, error: error.message };
   }
-  return { status: 1, returnObj: room };
 };
 
-const doVetoRequirements = ({ roomId }) => {
-  const room = rooms[roomId];
-  if (room.competition.contestOn || room.competition.veto.vetoOn) {
-    return { status: 0, error: 'Veto not allowed now.' };
+const doVetoRequirements = async ({ roomId }) => {
+  try {
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    const room = roomsFromRedis[roomId];
+    if (room.competition.contestOn || room.competition.veto.vetoOn) {
+      return { status: 0, error: 'Veto not allowed now.' };
+    }
+    return { status: 1, returnObj: room };
+  } catch (error) {
+    return { status: 0, error: error.message };
   }
-  return { status: 1, returnObj: room };
 };
 
-const doVeto = (quesIds, roomId, count, state) => {
-  // set the room state
-  const room = rooms[roomId];
-  if (state === 'start') {
-    rooms[roomId].competition.veto.vetoOn = true;
-    rooms[roomId].competition.veto.allQuestions = quesIds;
+const doVeto = async (quesIds, roomId, count, state) => {
+  try {
+    const roomsFromRedis = await redisClient.getRoomsStore();
+    // set the room state
+    const room = roomsFromRedis[roomId];
+    if (state === 'start') {
+      roomsFromRedis[roomId].competition.veto.vetoOn = true;
+      roomsFromRedis[roomId].competition.veto.allQuestions = quesIds;
 
-    // iitailize votes with 0
-    rooms[roomId].competition.veto.votes = {};
-    rooms[roomId].competition.veto.voted = [];
-    quesIds.forEach((id) => {
-      rooms[roomId].competition.veto.votes[id] = 0;
-    });
-    return { status: 1 };
+      // initialize votes with 0
+      roomsFromRedis[roomId].competition.veto.votes = {};
+      roomsFromRedis[roomId].competition.veto.voted = [];
+      quesIds.forEach((id) => {
+        roomsFromRedis[roomId].competition.veto.votes[id] = 0;
+      });
+      await redisClient.updateRoomsStore(roomsFromRedis);
+      return { status: 1 };
+    }
+
+    // no need to remove listeners
+    // all of them are volatile listners
+    // calculate veto results
+
+    room.competition.veto.vetoOn = false;
+    let results = Object.entries(room.competition.veto.votes);
+    results = results.sort((a, b) => b[1] - a[1]).slice(0, count);
+    // take only qids
+    results = results.map((ele) => ele[0]);
+    roomsFromRedis[roomId].competition.questions = results;
+    await redisClient.updateRoomsStore();
+    return { status: 1, returnObj: results };
+  } catch (error) {
+    return { status: 0, error: error.message };
   }
-
-  // no need to remove listeners
-  // all of them are volatile listners
-  // calculate veto results
-
-  room.competition.veto.vetoOn = false;
-  let results = Object.entries(room.competition.veto.votes);
-  results = results.sort((a, b) => b[1] - a[1]).slice(0, count);
-  // take only qids
-  results = results.map((ele) => ele[0]);
-  rooms[roomId].competition.questions = results;
-
-  return { status: 1, returnObj: results };
 };
 
 const codeSubmissionRequirements = (roomId, teamName, testcase, langId) => {

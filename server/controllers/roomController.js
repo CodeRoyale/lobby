@@ -247,7 +247,7 @@ const registerVotes = async ({ userName, votes }, { socket }) => {
   return roomObj.returnObj;
 };
 
-const doVeto = async (quesIds, roomId, count, socket) => {
+const doVeto = (quesIds, roomId, count, socket) => {
   return new Promise((resolve) => {
     let state = 'start';
     const roomCheck = RoomModel.doVetoRequirements({ roomId });
