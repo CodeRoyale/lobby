@@ -1,4 +1,3 @@
-//* import utils
 /// / using relative paths here (need to find better)
 // const redisClient = require('../utils/redis');
 
