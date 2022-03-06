@@ -335,7 +335,6 @@ const closeRoom = async (user, forceCloseRoom = false) => {
       !forceCloseRoom &&
       (room.competition.contestOn || room.competition.veto.vetoOn)
     ) {
-      console.log('you');
       return {
         status: 0,
         error: 'There is a ongoing competition. Finish it first',
@@ -637,10 +636,6 @@ const codeSubmissionRequirements = async (
   testcase,
   langId
 ) => {
-  console.log('roomId', roomId);
-  console.log('teamName', teamName);
-  console.log('testCase', testcase);
-  console.log('langId', langId);
   try {
     const roomsFromRedis = await redisClient.getRoomsStore();
     const room = roomsFromRedis[roomId];
