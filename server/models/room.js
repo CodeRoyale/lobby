@@ -8,6 +8,10 @@ const redisClient = require('../service/roomsRedis');
 // this is my db for now
 // const rooms = {};
 
+/* status :0 -> false
+status :1 -> true
+*/
+
 // create room
 // joinRoom
 // removeUserFromRoom
@@ -48,51 +52,12 @@ const ROOM_LIMITS = {
   vetoQuestionCount: 25,
 };
 
-// checking if redis is working or not
-// TODO to be removed later
-// function test() {
-//   const TEST_KEY = 'test_node';
-//   let value = null;
-//   const demoPromise = new Promise((resolve, reject) => {
-//     if (value !== null) {
-//       value = redisClient.json.get(TEST_KEY, {
-//         // JSON Path: .node = the element called 'node' at root level.
-//         path: '.node',
-//       });
-//       resolve('TEST_KEY added');
-//     } else {
-//       redisClient.json.set(TEST_KEY, '.', {
-//         node: 'blah blah black sheep',
-//       });
-//       reject(new Error('TEST_KEY was not found'));
-//     }
-//   });
-
-//   console.log(value);
-//   return demoPromise;
-// }
-
-// const test2 = async () => {
-//   try {
-//     const response = await test();
-//     console.log(`Response received ${response}`);
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
-
-// test2();
-
 const getProperValue = (field, passedValue) =>
   // * Helper function to get the appropriate value for the field
   // TODO : will require testing
   Math.min(ROOM_LIMITS[field], passedValue || ROOM_DEFAULTS[field]);
 
 const createRoom = async (roomConfig, user) => {
-  // TODO : @sastaachar
-
-  // TODO : refactor casing (camel -> _ )
-
   // check req params
   if (!roomConfig.userName) {
     return {
@@ -102,15 +67,12 @@ const createRoom = async (roomConfig, user) => {
   }
 
   //* Start creating a new room
-
   // we nee a *unique* roomId
-
-  // ! change this fn
   const roomId = auth.encryptData();
   try {
-    const roomsFromRedis = await redisClient.getRoomsStore();
+    const rooms = await redisClient.getRoomsStore();
 
-    if (roomsFromRedis[roomId]) {
+    if (rooms[roomId]) {
       return {
         status: 0,
         error: 'There is already a room present by the ID given',
@@ -162,8 +124,8 @@ const createRoom = async (roomConfig, user) => {
     };
 
     //* Store the room now
-    roomsFromRedis[roomId] = roomObj;
-    await redisClient.updateRoomsStore(roomsFromRedis);
+    rooms[roomId] = roomObj;
+    await redisClient.updateRoomsStore(rooms);
     return { status: 1, returnObj: roomObj };
   } catch (error) {
     return { status: 0, error: error.message };
@@ -173,46 +135,41 @@ const createRoom = async (roomConfig, user) => {
 const joinRoom = async (user, roomId, teamName) => {
   try {
     const { userName, profilePicture } = user;
-    const roomsFromRedis = await redisClient.getRoomsStore();
+    const rooms = await redisClient.getRoomsStore();
+
+    // (only run if room doesn't exists) and (user is allowed if private) and (space is there)
     if (
-      !roomsFromRedis[roomId] &&
-      (!roomsFromRedis[roomId].config.privateRoom ||
-        !roomsFromRedis[roomId].state.privateList.includes(userName)) &&
-      roomsFromRedis[roomId].state.curMemCount >
-        roomsFromRedis[roomId].config.maxPerRoom
+      !rooms[roomId] &&
+      (!rooms[roomId].config.privateRoom ||
+        !rooms[roomId].state.privateList.includes(userName)) &&
+      rooms[roomId].state.curMemCount > rooms[roomId].config.maxPerRoom
     ) {
       return { status: 0, error: "The User doesn't meet the specifications" };
     }
-    // (only run if room exists) and (user is allowed if private) and (space is there)
 
-    // quit from prev room and try again
+    // User is already in a different room donot allow
     if (user.roomId) {
-      // already in a group don't allow
       return { status: 1, error: 'User already in room' };
     }
 
-    // successful (user will now be added)
-
+    // successful (user will now join room)
     if (
       teamName &&
-      roomsFromRedis[roomId].team[teamName] &&
-      roomsFromRedis[roomId].teams[teamName].length <
-        roomsFromRedis[roomId].config.maxPerTeam
+      rooms[roomId].team[teamName] &&
+      rooms[roomId].teams[teamName].length < rooms[roomId].config.maxPerTeam
     ) {
       // if user passes a team and that team exist and there is space in that team
-      roomsFromRedis[roomId].teams[teamName].push(userName);
+      rooms[roomId].teams[teamName].push(userName);
     } else {
       // else bench the user
-      roomsFromRedis[roomId].state.bench.push(userName);
+      rooms[roomId].state.bench.push(userName);
     }
 
     // user has been added to bench or a Team
-    roomsFromRedis[roomId].state.curMemCount += 1;
-    roomsFromRedis[roomId].state.profilePictures[userName] = profilePicture;
-    // TODO remove this console
-    console.log(roomsFromRedis);
-    await redisClient.updateRoomsStore(roomsFromRedis);
-    return { status: 2, returnObj: roomsFromRedis[roomId] };
+    rooms[roomId].state.curMemCount += 1;
+    rooms[roomId].state.profilePictures[userName] = profilePicture;
+    await redisClient.updateRoomsStore(rooms);
+    return { status: 2, returnObj: rooms[roomId] };
   } catch (error) {
     return { status: 0, error: error.message };
   }
@@ -270,12 +227,41 @@ const removeUserFromRoom = async (user) => {
   }
 };
 
+const createTeam = async (user, teamName) => {
+  try {
+    const rooms = await redisClient.getRoomsStore();
+    const { userName, roomId } = user;
+    const room = rooms[roomId];
+    // If user not in room or is not admin of the room
+    if (!roomId || room.config.admin !== userName) {
+      return { status: 0, error: 'Only admin can do this' };
+    }
+    // If teams in room exheed the max team limit
+    // If team is already created before
+    if (
+      Object.keys(room.teams).length > room.config.maxTeams &&
+      room.teams[teamName]
+    ) {
+      return {
+        status: 0,
+        error:
+          'The team name has already been alloted or the team is already in',
+      };
+    }
+    room.teams[teamName] = [];
+    await redisClient.updateRoomsStore(rooms);
+    return { status: 1, returnObj: rooms[roomId].teams };
+  } catch (error) {
+    return { status: 0, error: error.message };
+  }
+};
+
 const joinTeam = async (user, teamName) => {
   try {
-    const roomsFromRedis = await redisClient.getRoomsStore();
+    const rooms = await redisClient.getRoomsStore();
     const { userName } = user;
-    const room = roomsFromRedis[user.roomId];
-    // only run if user and room exits and user is in that room
+    const room = rooms[user.roomId];
+    // Only run if room exists and user is in that room
     // and there is space
     if (
       !room &&
@@ -293,15 +279,41 @@ const joinTeam = async (user, teamName) => {
     }
 
     // remove from bench
-    const newBench = roomsFromRedis[user.roomId].state.bench.filter(
+    const newBench = rooms[user.roomId].state.bench.filter(
       (ele) => ele !== userName
     );
-    roomsFromRedis[user.roomId].state.bench = newBench;
+    rooms[user.roomId].state.bench = newBench;
 
-    // in new team
-    roomsFromRedis[user.roomId].teams[teamName].push(userName);
-    await redisClient.updateRoomsStore(roomsFromRedis);
-    return { status: 1, returnObj: roomsFromRedis[user.roomId].teams };
+    // Push user into team
+    rooms[user.roomId].teams[teamName].push(userName);
+    await redisClient.updateRoomsStore(rooms);
+    return { status: 1, returnObj: rooms[user.roomId].teams };
+  } catch (error) {
+    return { status: 0, error: error.message };
+  }
+};
+
+const leaveTeam = async (user) => {
+  try {
+    const rooms = await redisClient.getRoomsStore();
+    const { userName } = user;
+
+    // Check if in a room and in a team
+    if (!user.roomId && !user.teamName) {
+      return {
+        status: 0,
+        error: 'User does not meet the specifications to leave the team',
+      };
+    }
+
+    const newTeam = rooms[user.roomId].teams[user.teamName].filter(
+      (ele) => ele !== userName
+    );
+    rooms[user.roomId].teams[user.teamName] = newTeam;
+    rooms[user.roomId].state.bench.push(userName);
+    await redisClient.updateRoomsStore(rooms);
+
+    return { status: 1, returnObj: rooms[user.roomId].teams };
   } catch (error) {
     return { status: 0, error: error.message };
   }
@@ -309,9 +321,9 @@ const joinTeam = async (user, teamName) => {
 
 const closeRoom = async (user, forceCloseRoom = false) => {
   try {
-    const roomsFromRedis = await redisClient.getRoomsStore();
+    const rooms = await redisClient.getRoomsStore();
     const { roomId, userName } = user;
-    const room = roomsFromRedis[roomId];
+    const room = rooms[roomId];
 
     if (!room && room.config.admin !== userName) {
       return {
@@ -323,86 +335,30 @@ const closeRoom = async (user, forceCloseRoom = false) => {
       !forceCloseRoom &&
       (room.competition.contestOn || room.competition.veto.vetoOn)
     ) {
+      console.log('you');
       return {
         status: 0,
         error: 'There is a ongoing competition. Finish it first',
       };
     }
     // everyone from room bench
-    const allMembers = roomsFromRedis[roomId].state.bench;
+    const allMembers = rooms[roomId].state.bench;
     // from all teams
-    Object.keys(roomsFromRedis[roomId].teams).forEach((teamName) => {
-      roomsFromRedis[roomId].teams[teamName].forEach((member) => {
+    Object.keys(rooms[roomId].teams).forEach((teamName) => {
+      rooms[roomId].teams[teamName].forEach((member) => {
         allMembers.push(member);
       });
     });
-    // delete the stupid room
-    delete roomsFromRedis[roomId];
-    await redisClient.updateRoomsStore(roomsFromRedis);
+
+    delete rooms[roomId];
+    await redisClient.updateRoomsStore(rooms);
     return { status: 1, returnObj: allMembers };
   } catch (error) {
     return { status: 0, error: error.message };
   }
 };
 
-/* status :0 -> false
-status :1 -> true
-*/
-
-const createTeam = async (user, teamName) => {
-  try {
-    const roomsFromRedis = await redisClient.getRoomsStore();
-    // if more teams are allowed
-    // if teamName is not already used
-    // and user is admin
-    const { userName, roomId } = user;
-    // if user not in room or not admin of the room
-    const room = roomsFromRedis[roomId];
-    console.log(roomId, 'yeh dakhhh', room.config.admin, 'dekho', userName);
-    if (!roomId || room.config.admin !== userName) {
-      return { status: 0, error: 'Only admin can do this' };
-    }
-    if (
-      Object.keys(room.teams).length > room.config.maxTeams &&
-      room.teams[teamName]
-    ) {
-      return {
-        status: 0,
-        error:
-          'The team name has already been alloted or the team is already in',
-      };
-    }
-    room.teams[teamName] = [];
-    await redisClient.updateRoomsStore(roomsFromRedis);
-    return { status: 1, returnObj: roomsFromRedis[roomId].teams };
-  } catch (error) {
-    return { status: 0, error: error.message };
-  }
-};
-
-const leaveTeam = async (user) => {
-  try {
-    const roomsFromRedis = await redisClient.getRoomsStore();
-    const { roomId, teamName, userName } = user;
-    const room = roomsFromRedis[roomId];
-
-    // check if in a room and in a team
-    if (!roomId && !teamName) {
-      return {
-        status: 0,
-        error: 'User does not meet the specifications to leave the team',
-      };
-    }
-
-    const newTeam = room.teams[teamName].filter((ele) => ele !== userName);
-    room.teams[teamName] = newTeam;
-    room.state.bench.push(userName);
-
-    return { status: 1, returnObj: room.teams };
-  } catch (error) {
-    return { status: 0, error: error.message };
-  }
-};
+// v2 testing done till here
 
 const addPrivateList = async (user, privateList) => {
   try {
@@ -681,6 +637,10 @@ const codeSubmissionRequirements = async (
   testcase,
   langId
 ) => {
+  console.log('roomId', roomId);
+  console.log('teamName', teamName);
+  console.log('testCase', testcase);
+  console.log('langId', langId);
   try {
     const roomsFromRedis = await redisClient.getRoomsStore();
     const room = roomsFromRedis[roomId];
